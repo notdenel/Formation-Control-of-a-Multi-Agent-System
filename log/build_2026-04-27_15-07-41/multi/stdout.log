@@ -1,0 +1,19 @@
+running develop
+running egg_info
+writing multi.egg-info/PKG-INFO
+writing dependency_links to multi.egg-info/dependency_links.txt
+writing entry points to multi.egg-info/entry_points.txt
+writing requirements to multi.egg-info/requires.txt
+writing top-level names to multi.egg-info/top_level.txt
+reading manifest file 'multi.egg-info/SOURCES.txt'
+writing manifest file 'multi.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/agent3/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi.egg-link (link to .)
+Installing costmap_publish script to /home/agent3/ros2_ws/src/install/multi/lib/multi
+Installing formation_update script to /home/agent3/ros2_ws/src/install/multi/lib/multi
+Installing slave_tf_listener script to /home/agent3/ros2_ws/src/install/multi/lib/multi
+Installing tf_listen script to /home/agent3/ros2_ws/src/install/multi/lib/multi
+Installing tf_publish script to /home/agent3/ros2_ws/src/install/multi/lib/multi
+
+Installed /home/agent3/ros2_ws/src/build/multi
+running symlink_data

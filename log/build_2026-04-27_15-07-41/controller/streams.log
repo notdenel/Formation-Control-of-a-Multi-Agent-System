@@ -1,0 +1,18 @@
+[2.019s] Invoking command in '/home/agent3/ros2_ws/src/build/controller': PYTHONPATH=/home/agent3/ros2_ws/src/build/controller/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent3/ros2_ws/src/install/controller/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/agent3/ros2_ws/src/build/controller/build --no-deps symlink_data
+[2.582s] running develop
+[2.852s] running egg_info
+[2.874s] writing controller.egg-info/PKG-INFO
+[2.875s] writing dependency_links to controller.egg-info/dependency_links.txt
+[2.877s] writing entry points to controller.egg-info/entry_points.txt
+[2.878s] writing requirements to controller.egg-info/requires.txt
+[2.879s] writing top-level names to controller.egg-info/top_level.txt
+[2.929s] reading manifest file 'controller.egg-info/SOURCES.txt'
+[2.931s] writing manifest file 'controller.egg-info/SOURCES.txt'
+[2.956s] running build_ext
+[2.957s] Creating /home/agent3/ros2_ws/src/install/controller/lib/python3.12/site-packages/controller.egg-link (link to .)
+[2.958s] Installing init_pose script to /home/agent3/ros2_ws/src/install/controller/lib/controller
+[2.959s] Installing odom_publisher script to /home/agent3/ros2_ws/src/install/controller/lib/controller
+[2.961s] 
+[2.962s] Installed /home/agent3/ros2_ws/src/build/controller
+[2.962s] running symlink_data
+[3.109s] Invoked command in '/home/agent3/ros2_ws/src/build/controller' returned '0': PYTHONPATH=/home/agent3/ros2_ws/src/build/controller/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent3/ros2_ws/src/install/controller/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/agent3/ros2_ws/src/build/controller/build --no-deps symlink_data

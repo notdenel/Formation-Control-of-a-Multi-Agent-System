@@ -1,0 +1,17 @@
+[1.584s] Invoking command in '/home/agent3/ros2_ws/src/build/ros_robot_controller': PYTHONPATH=/home/agent3/ros2_ws/src/build/ros_robot_controller/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent3/ros2_ws/src/install/ros_robot_controller/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/agent3/ros2_ws/src/build/ros_robot_controller/build --no-deps symlink_data
+[2.200s] running develop
+[2.578s] running egg_info
+[2.607s] writing ros_robot_controller.egg-info/PKG-INFO
+[2.607s] writing dependency_links to ros_robot_controller.egg-info/dependency_links.txt
+[2.608s] writing entry points to ros_robot_controller.egg-info/entry_points.txt
+[2.609s] writing requirements to ros_robot_controller.egg-info/requires.txt
+[2.610s] writing top-level names to ros_robot_controller.egg-info/top_level.txt
+[2.723s] reading manifest file 'ros_robot_controller.egg-info/SOURCES.txt'
+[2.730s] writing manifest file 'ros_robot_controller.egg-info/SOURCES.txt'
+[2.773s] running build_ext
+[2.774s] Creating /home/agent3/ros2_ws/src/install/ros_robot_controller/lib/python3.12/site-packages/ros-robot-controller.egg-link (link to .)
+[2.775s] Installing ros_robot_controller script to /home/agent3/ros2_ws/src/install/ros_robot_controller/lib/ros_robot_controller
+[2.778s] 
+[2.778s] Installed /home/agent3/ros2_ws/src/build/ros_robot_controller
+[2.780s] running symlink_data
+[2.943s] Invoked command in '/home/agent3/ros2_ws/src/build/ros_robot_controller' returned '0': PYTHONPATH=/home/agent3/ros2_ws/src/build/ros_robot_controller/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent3/ros2_ws/src/install/ros_robot_controller/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/agent3/ros2_ws/src/build/ros_robot_controller/build --no-deps symlink_data
