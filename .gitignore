@@ -1,0 +1,13 @@
+build/
+install/
+log/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.swp
+.DS_Store
+.env
+*.bag
+*.db3
+*.mcap
