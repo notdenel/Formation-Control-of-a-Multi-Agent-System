@@ -1,0 +1,77 @@
+amcl:
+  ros__parameters:
+    use_sim_time: false
+
+    # ── Particle filter ───────────────────────────────────────────────────────
+    min_particles: 500
+    max_particles: 2000
+    kld_err: 0.05
+    kld_z: 0.99
+
+    # ── Motion model (differential/mecanum) ──────────────────────────────────
+    alpha1: 0.2    # rotation noise from rotation
+    alpha2: 0.2    # rotation noise from translation
+    alpha3: 0.2    # translation noise from translation
+    alpha4: 0.2    # translation noise from rotation
+    alpha5: 0.1    # (strafe — mecanum only)
+
+    robot_model_type: nav2_amcl::OmniMotionModel   # mecanum is omnidirectional
+
+    # ── Laser model ───────────────────────────────────────────────────────────
+    laser_model_type: likelihood_field
+    laser_min_range: 0.10
+    laser_max_range: 12.0
+    max_beams: 60
+    laser_z_hit: 0.5
+    laser_z_short: 0.05
+    laser_z_max: 0.05
+    laser_z_rand: 0.5
+    laser_sigma_hit: 0.2
+    laser_lambda_short: 0.1
+    laser_likelihood_max_dist: 2.0
+
+    # ── Update thresholds ─────────────────────────────────────────────────────
+    update_min_d: 0.2       # metres
+    update_min_a: 0.5236    # radians (30°)
+    resample_interval: 1
+
+    # ── TF ────────────────────────────────────────────────────────────────────
+    transform_tolerance: 1.0
+    # AMCL publishes map -> odom TF. Required true for pure AMCL localization on a
+    # static map. Set to false ONLY when slam_toolbox (lifelong/localization) is
+    # already broadcasting map -> odom.
+    tf_broadcast: true
+
+    # ── Frames ────────────────────────────────────────────────────────────────
+    global_frame_id: map
+    odom_frame_id: odom
+    base_frame_id: base_footprint
+
+    # ── Topics ────────────────────────────────────────────────────────────────
+    scan_topic: scan_raw
+    map_topic: map
+
+    # ── Initial pose ─────────────────────────────────────────────────────────
+    set_initial_pose: true
+    initial_pose:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+      yaw: 0.0
+
+    # ── Recovery ──────────────────────────────────────────────────────────────
+    recovery_alpha_slow: 0.001
+    recovery_alpha_fast: 0.1
+    do_beamskip: false
+    beam_skip_distance: 0.5
+    beam_skip_threshold: 0.3
+    beam_skip_error_threshold: 0.9
+    sigma_hit: 0.2
+    z_hit: 0.5
+    z_short: 0.05
+    z_max: 0.05
+    z_rand: 0.5
+    lambda_short: 0.1
+    pf_err: 0.05
+    pf_z: 0.99
+    save_pose_rate: 0.5
