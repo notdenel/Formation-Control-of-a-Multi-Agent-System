@@ -1,1 +1,3 @@
-/home/agent3/ros2_ws/src/driver/ros_robot_controller_msgs/msg/SetBusServoState.msg
+ros_robot_controller_msgs/BusServoState[] state
+
+float64 duration

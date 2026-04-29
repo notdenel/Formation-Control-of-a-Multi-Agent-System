@@ -1,1 +1,0 @@
-/home/agent3/ros2_ws/src/peripherals/launch/lidar.launch.py

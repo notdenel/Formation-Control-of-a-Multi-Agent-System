@@ -1,1 +1,4 @@
-/home/agent3/ros2_ws/src/driver/ros_robot_controller_msgs/msg/LedState.msg
+uint8 id
+float32 on_time
+float32 off_time
+uint16 repeat

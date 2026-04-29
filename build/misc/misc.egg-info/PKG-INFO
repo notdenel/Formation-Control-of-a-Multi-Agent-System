@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: misc
+Version: 0.0.1
+Summary: Navigation, CoM, and SLAM launch infrastructure
+Maintainer: agent3
+Maintainer-email: benjbanh@gmail.com
+License: Apache-2.0

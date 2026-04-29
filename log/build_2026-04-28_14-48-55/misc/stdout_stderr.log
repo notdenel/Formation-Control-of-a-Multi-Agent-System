@@ -1,0 +1,54 @@
+running egg_info
+creating ../build/misc/misc.egg-info
+writing ../build/misc/misc.egg-info/PKG-INFO
+writing dependency_links to ../build/misc/misc.egg-info/dependency_links.txt
+writing entry points to ../build/misc/misc.egg-info/entry_points.txt
+writing requirements to ../build/misc/misc.egg-info/requires.txt
+writing top-level names to ../build/misc/misc.egg-info/top_level.txt
+writing manifest file '../build/misc/misc.egg-info/SOURCES.txt'
+reading manifest file '../build/misc/misc.egg-info/SOURCES.txt'
+writing manifest file '../build/misc/misc.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/agent1/ros2_ws/src/build/misc/build
+creating /home/agent1/ros2_ws/src/build/misc/build/lib
+creating /home/agent1/ros2_ws/src/build/misc/build/lib/misc
+copying misc/__init__.py -> /home/agent1/ros2_ws/src/build/misc/build/lib/misc
+copying misc/global_ref_nav.py -> /home/agent1/ros2_ws/src/build/misc/build/lib/misc
+copying misc/slam_pose_relay.py -> /home/agent1/ros2_ws/src/build/misc/build/lib/misc
+copying misc/center_of_mass.py -> /home/agent1/ros2_ws/src/build/misc/build/lib/misc
+running install
+running install_lib
+creating /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc
+copying /home/agent1/ros2_ws/src/build/misc/build/lib/misc/__init__.py -> /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc
+copying /home/agent1/ros2_ws/src/build/misc/build/lib/misc/global_ref_nav.py -> /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc
+copying /home/agent1/ros2_ws/src/build/misc/build/lib/misc/slam_pose_relay.py -> /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc
+copying /home/agent1/ros2_ws/src/build/misc/build/lib/misc/center_of_mass.py -> /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc
+byte-compiling /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc/__init__.py to __init__.cpython-312.pyc
+byte-compiling /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc/global_ref_nav.py to global_ref_nav.cpython-312.pyc
+byte-compiling /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc/slam_pose_relay.py to slam_pose_relay.cpython-312.pyc
+byte-compiling /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc/center_of_mass.py to center_of_mass.cpython-312.pyc
+running install_data
+creating /home/agent1/ros2_ws/src/install/misc/share/ament_index
+creating /home/agent1/ros2_ws/src/install/misc/share/ament_index/resource_index
+creating /home/agent1/ros2_ws/src/install/misc/share/ament_index/resource_index/packages
+copying resource/misc -> /home/agent1/ros2_ws/src/install/misc/share/ament_index/resource_index/packages
+copying package.xml -> /home/agent1/ros2_ws/src/install/misc/share/misc
+creating /home/agent1/ros2_ws/src/install/misc/share/misc/launch
+copying launch/slam_mapping.launch.py -> /home/agent1/ros2_ws/src/install/misc/share/misc/launch
+copying launch/nav_lifelong.launch.py -> /home/agent1/ros2_ws/src/install/misc/share/misc/launch
+creating /home/agent1/ros2_ws/src/install/misc/share/misc/config
+copying config/amcl_params.yaml -> /home/agent1/ros2_ws/src/install/misc/share/misc/config
+copying config/mapper_params_mapping.yaml -> /home/agent1/ros2_ws/src/install/misc/share/misc/config
+copying config/mapper_params_lifelong.yaml -> /home/agent1/ros2_ws/src/install/misc/share/misc/config
+creating /home/agent1/ros2_ws/src/install/misc/share/misc/rviz
+copying rviz/navigation.rviz -> /home/agent1/ros2_ws/src/install/misc/share/misc/rviz
+copying rviz/slam_mapping.rviz -> /home/agent1/ros2_ws/src/install/misc/share/misc/rviz
+creating /home/agent1/ros2_ws/src/install/misc/share/misc/maps
+running install_egg_info
+Copying ../build/misc/misc.egg-info to /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc-0.0.1-py3.12.egg-info
+running install_scripts
+Installing center_of_mass script to /home/agent1/ros2_ws/src/install/misc/lib/misc
+Installing global_ref_nav script to /home/agent1/ros2_ws/src/install/misc/lib/misc
+Installing slam_pose_relay script to /home/agent1/ros2_ws/src/install/misc/lib/misc
+writing list of installed files to '/home/agent1/ros2_ws/src/build/misc/install.log'

@@ -1,1 +1,2 @@
-/home/agent3/ros2_ws/src/build/ldlidar_stl_ros2/ament_cmake_environment_hooks/local_setup.dsv
+source;share/ldlidar_stl_ros2/environment/ament_prefix_path.sh
+source;share/ldlidar_stl_ros2/environment/path.sh

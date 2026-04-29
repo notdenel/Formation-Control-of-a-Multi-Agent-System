@@ -1,0 +1,244 @@
+[0.035s] Invoking command in '/home/agent1/ros2_ws/src/build/interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/agent1/ros2_ws/src/install/sdk:/home/agent1/ros2_ws/src/install/ros_robot_controller:/home/agent1/ros2_ws/src/install/peripherals:/home/agent1/ros2_ws/src/install/multi:/home/agent1/ros2_ws/src/install/controller:/opt/ros/jazzy /usr/bin/cmake /home/agent1/ros2_ws/src/interfaces -DCMAKE_INSTALL_PREFIX=/home/agent1/ros2_ws/src/install/interfaces
+[0.752s] -- The C compiler identification is GNU 13.3.0
+[0.752s] -- The CXX compiler identification is GNU 13.3.0
+[0.752s] -- Detecting C compiler ABI info
+[0.752s] -- Detecting C compiler ABI info - done
+[0.752s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.752s] -- Detecting C compile features
+[0.752s] -- Detecting C compile features - done
+[0.753s] -- Detecting CXX compiler ABI info
+[0.753s] -- Detecting CXX compiler ABI info - done
+[0.753s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.753s] -- Detecting CXX compile features
+[0.753s] -- Detecting CXX compile features - done
+[0.753s] -- Found ament_cmake: 2.5.6 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[1.049s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[1.317s] -- Found rosidl_default_generators: 1.6.0 (/opt/ros/jazzy/share/rosidl_default_generators/cmake)
+[1.339s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.463s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.603s] -- Found rosidl_adapter: 4.6.7 (/opt/ros/jazzy/share/rosidl_adapter/cmake)
+[1.613s] -- Found geometry_msgs: 5.3.7 (/opt/ros/jazzy/share/geometry_msgs/cmake)
+[3.354s] -- Found ament_cmake_ros: 0.12.0 (/opt/ros/jazzy/share/ament_cmake_ros/cmake)
+[4.611s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[6.572s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[6.580s] -- Found python_cmake_module: 0.11.1 (/opt/ros/jazzy/share/python_cmake_module/cmake)
+[6.947s] -- Found PythonExtra: /usr/bin/python3  
+[8.136s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter Development NumPy Development.Module Development.Embed 
+[8.400s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[8.422s] -- Configuring done (8.4s)
+[8.528s] -- Generating done (0.1s)
+[8.560s] -- Build files have been written to: /home/agent1/ros2_ws/src/build/interfaces
+[9.216s] Invoked command in '/home/agent1/ros2_ws/src/build/interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/agent1/ros2_ws/src/install/sdk:/home/agent1/ros2_ws/src/install/ros_robot_controller:/home/agent1/ros2_ws/src/install/peripherals:/home/agent1/ros2_ws/src/install/multi:/home/agent1/ros2_ws/src/install/controller:/opt/ros/jazzy /usr/bin/cmake /home/agent1/ros2_ws/src/interfaces -DCMAKE_INSTALL_PREFIX=/home/agent1/ros2_ws/src/install/interfaces
+[9.219s] Invoking command in '/home/agent1/ros2_ws/src/build/interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/agent1/ros2_ws/src/install/sdk:/home/agent1/ros2_ws/src/install/ros_robot_controller:/home/agent1/ros2_ws/src/install/peripherals:/home/agent1/ros2_ws/src/install/multi:/home/agent1/ros2_ws/src/install/controller:/opt/ros/jazzy /usr/bin/cmake --build /home/agent1/ros2_ws/src/build/interfaces -- -j4 -l4
+[9.492s] [  2%] [34m[1mGenerating Rust code for ROS interfaces[0m
+[9.510s] [  5%] [34m[1mGenerating type hashes for ROS interfaces[0m
+[9.510s] [  5%] Built target ament_cmake_python_copy_interfaces
+[10.165s] running egg_info
+[10.168s] creating interfaces.egg-info
+[10.197s] writing interfaces.egg-info/PKG-INFO
+[10.198s] writing dependency_links to interfaces.egg-info/dependency_links.txt
+[10.199s] writing top-level names to interfaces.egg-info/top_level.txt
+[10.199s] writing manifest file 'interfaces.egg-info/SOURCES.txt'
+[10.297s] reading manifest file 'interfaces.egg-info/SOURCES.txt'
+[10.304s] writing manifest file 'interfaces.egg-info/SOURCES.txt'
+[10.565s] [  5%] Built target ament_cmake_python_build_interfaces_egg
+[10.831s] [  5%] Built target interfaces__rosidl_generator_type_description
+[10.897s] [  8%] [34m[1mGenerating C code for ROS interfaces[0m
+[10.959s] [ 11%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[11.070s] [ 11%] Built target interfaces__rs
+[12.383s] [ 14%] [32mBuilding C object CMakeFiles/interfaces__rosidl_generator_c.dir/rosidl_generator_c/interfaces/srv/detail/set_pose2_d__description.c.o[0m
+[12.389s] [ 20%] [32mBuilding C object CMakeFiles/interfaces__rosidl_generator_c.dir/rosidl_generator_c/interfaces/srv/detail/set_pose2_d__functions.c.o[0m
+[12.393s] [ 17%] [32mBuilding C object CMakeFiles/interfaces__rosidl_generator_c.dir/rosidl_generator_c/interfaces/srv/detail/set_pose2_d__type_support.c.o[0m
+[12.636s] [ 20%] Built target interfaces__cpp
+[12.722s] [ 22%] [32m[1mLinking C shared library libinterfaces__rosidl_generator_c.so[0m
+[12.872s] [ 22%] Built target interfaces__rosidl_generator_c
+[12.920s] [ 25%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[12.923s] [ 31%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[12.924s] [ 34%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[12.924s] [ 34%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[13.811s] [ 37%] [32mBuilding CXX object CMakeFiles/interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/interfaces/srv/set_pose2_d__type_support.cpp.o[0m
+[13.875s] [ 40%] [32mBuilding C object CMakeFiles/interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/interfaces/srv/detail/set_pose2_d__type_support.c.o[0m
+[14.057s] [ 42%] [32m[1mLinking CXX shared library libinterfaces__rosidl_typesupport_c.so[0m
+[14.186s] [ 45%] [32m[1mLinking C shared library libinterfaces__rosidl_typesupport_introspection_c.so[0m
+[14.208s] [ 48%] [32mBuilding CXX object CMakeFiles/interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/interfaces/srv/detail/dds_fastrtps/set_pose2_d__type_support.cpp.o[0m
+[14.251s] [ 51%] [32mBuilding CXX object CMakeFiles/interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/interfaces/srv/detail/set_pose2_d__type_support_c.cpp.o[0m
+[14.283s] [ 51%] Built target interfaces__rosidl_typesupport_c
+[14.323s] [ 51%] Built target interfaces__rosidl_typesupport_introspection_c
+[14.329s] [ 54%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[14.379s] [ 57%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[15.614s] [ 60%] [32mBuilding CXX object CMakeFiles/interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/interfaces/srv/set_pose2_d__type_support.cpp.o[0m
+[15.675s] [ 62%] [32mBuilding CXX object CMakeFiles/interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/interfaces/srv/detail/set_pose2_d__type_support.cpp.o[0m
+[17.053s] [ 65%] [32m[1mLinking CXX shared library libinterfaces__rosidl_typesupport_fastrtps_c.so[0m
+[17.133s] [ 68%] [32m[1mLinking CXX shared library libinterfaces__rosidl_typesupport_fastrtps_cpp.so[0m
+[17.219s] [ 71%] [32m[1mLinking CXX shared library libinterfaces__rosidl_typesupport_cpp.so[0m
+[17.507s] [ 71%] Built target interfaces__rosidl_typesupport_fastrtps_c
+[17.597s] [ 71%] Built target interfaces__rosidl_typesupport_cpp
+[17.649s] [ 74%] [32m[1mLinking CXX shared library libinterfaces__rosidl_typesupport_introspection_cpp.so[0m
+[17.657s] [ 74%] Built target interfaces__rosidl_typesupport_fastrtps_cpp
+[17.897s] [ 74%] Built target interfaces__rosidl_typesupport_introspection_cpp
+[17.947s] [ 74%] Built target interfaces
+[17.994s] [ 77%] [34m[1mGenerating Python code for ROS interfaces[0m
+[18.776s] [ 77%] Built target interfaces__py
+[18.829s] [ 80%] [32mBuilding C object CMakeFiles/interfaces__rosidl_generator_py.dir/rosidl_generator_py/interfaces/srv/_set_pose2_d_s.c.o[0m
+[19.191s] [ 82%] [32m[1mLinking C shared library libinterfaces__rosidl_generator_py.so[0m
+[19.314s] [ 82%] Built target interfaces__rosidl_generator_py
+[19.471s] [ 91%] [32mBuilding C object CMakeFiles/interfaces_s__rosidl_typesupport_fastrtps_c.dir/rosidl_generator_py/interfaces/_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[19.471s] [ 91%] [32mBuilding C object CMakeFiles/interfaces_s__rosidl_typesupport_introspection_c.dir/rosidl_generator_py/interfaces/_interfaces_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[19.471s] [ 91%] [32mBuilding C object CMakeFiles/interfaces_s__rosidl_typesupport_c.dir/rosidl_generator_py/interfaces/_interfaces_s.ep.rosidl_typesupport_c.c.o[0m
+[19.779s] [ 94%] [32m[1mLinking C shared module rosidl_generator_py/interfaces/interfaces_s__rosidl_typesupport_introspection_c.so[0m
+[19.885s] [ 94%] Built target interfaces_s__rosidl_typesupport_introspection_c
+[19.973s] [ 97%] [32m[1mLinking C shared module rosidl_generator_py/interfaces/interfaces_s__rosidl_typesupport_c.so[0m
+[19.974s] [100%] [32m[1mLinking C shared module rosidl_generator_py/interfaces/interfaces_s__rosidl_typesupport_fastrtps_c.so[0m
+[20.058s] [100%] Built target interfaces_s__rosidl_typesupport_c
+[20.059s] [100%] Built target interfaces_s__rosidl_typesupport_fastrtps_c
+[20.088s] Invoked command in '/home/agent1/ros2_ws/src/build/interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/agent1/ros2_ws/src/install/sdk:/home/agent1/ros2_ws/src/install/ros_robot_controller:/home/agent1/ros2_ws/src/install/peripherals:/home/agent1/ros2_ws/src/install/multi:/home/agent1/ros2_ws/src/install/controller:/opt/ros/jazzy /usr/bin/cmake --build /home/agent1/ros2_ws/src/build/interfaces -- -j4 -l4
+[20.112s] Invoking command in '/home/agent1/ros2_ws/src/build/interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/agent1/ros2_ws/src/install/sdk:/home/agent1/ros2_ws/src/install/ros_robot_controller:/home/agent1/ros2_ws/src/install/peripherals:/home/agent1/ros2_ws/src/install/multi:/home/agent1/ros2_ws/src/install/controller:/opt/ros/jazzy /usr/bin/cmake --install /home/agent1/ros2_ws/src/build/interfaces
+[20.133s] -- Install configuration: ""
+[20.134s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/ament_index/resource_index/rosidl_interfaces/interfaces
+[20.134s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/srv/SetPose2D.json
+[20.135s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces
+[20.135s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/msg
+[20.136s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/msg/rosidl_generator_c__visibility_control.h
+[20.136s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv
+[20.137s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/set_pose2_d.h
+[20.137s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail
+[20.137s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__functions.c
+[20.138s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__struct.h
+[20.138s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__description.c
+[20.139s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__functions.h
+[20.139s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__type_support.c
+[20.139s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__type_support.h
+[20.139s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/environment/library_path.sh
+[20.139s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/environment/library_path.dsv
+[20.140s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_generator_c.so
+[20.140s] -- Set non-toolchain portion of runtime path of "/home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_generator_c.so" to ""
+[20.140s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces
+[20.140s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/msg
+[20.141s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[20.141s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv
+[20.141s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail
+[20.141s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__rosidl_typesupport_fastrtps_c.h
+[20.141s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_typesupport_fastrtps_c.so
+[20.141s] -- Set non-toolchain portion of runtime path of "/home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_typesupport_fastrtps_c.so" to ""
+[20.142s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces
+[20.142s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/msg
+[20.142s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[20.142s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv
+[20.142s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail
+[20.142s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__type_support.c
+[20.143s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__rosidl_typesupport_introspection_c.h
+[20.143s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_typesupport_introspection_c.so
+[20.143s] -- Set non-toolchain portion of runtime path of "/home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_typesupport_introspection_c.so" to ""
+[20.143s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_typesupport_c.so
+[20.143s] -- Set non-toolchain portion of runtime path of "/home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_typesupport_c.so" to ""
+[20.144s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces
+[20.144s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/msg
+[20.144s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
+[20.144s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv
+[20.145s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/set_pose2_d.hpp
+[20.145s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail
+[20.145s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__struct.hpp
+[20.146s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__type_support.hpp
+[20.146s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__builder.hpp
+[20.146s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__traits.hpp
+[20.146s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces
+[20.146s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/msg
+[20.146s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[20.147s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv
+[20.147s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail
+[20.147s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/dds_fastrtps
+[20.147s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__rosidl_typesupport_fastrtps_cpp.hpp
+[20.147s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_typesupport_fastrtps_cpp.so
+[20.148s] -- Set non-toolchain portion of runtime path of "/home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_typesupport_fastrtps_cpp.so" to ""
+[20.148s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces
+[20.148s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv
+[20.148s] -- Up-to-date: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail
+[20.148s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__rosidl_typesupport_introspection_cpp.hpp
+[20.148s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/include/interfaces/interfaces/srv/detail/set_pose2_d__type_support.cpp
+[20.149s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_typesupport_introspection_cpp.so
+[20.149s] -- Set non-toolchain portion of runtime path of "/home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_typesupport_introspection_cpp.so" to ""
+[20.150s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_typesupport_cpp.so
+[20.150s] -- Set non-toolchain portion of runtime path of "/home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_typesupport_cpp.so" to ""
+[20.151s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/environment/pythonpath.sh
+[20.151s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/environment/pythonpath.dsv
+[20.151s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces-0.0.1-py3.12.egg-info
+[20.152s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces-0.0.1-py3.12.egg-info/dependency_links.txt
+[20.152s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces-0.0.1-py3.12.egg-info/SOURCES.txt
+[20.152s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces-0.0.1-py3.12.egg-info/top_level.txt
+[20.152s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces-0.0.1-py3.12.egg-info/PKG-INFO
+[20.152s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces
+[20.153s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/interfaces_s__rosidl_typesupport_fastrtps_c.so
+[20.153s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/srv
+[20.153s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/srv/_set_pose2_d_s.c
+[20.153s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/srv/_set_pose2_d.py
+[20.153s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/srv/__init__.py
+[20.154s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/_interfaces_s.ep.rosidl_typesupport_introspection_c.c
+[20.154s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/interfaces_s__rosidl_typesupport_introspection_c.so
+[20.154s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/__init__.py
+[20.154s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/_interfaces_s.ep.rosidl_typesupport_c.c
+[20.154s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/interfaces_s__rosidl_typesupport_c.so
+[20.155s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
+[20.250s] Listing '/home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces'...
+[20.251s] Compiling '/home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/__init__.py'...
+[20.251s] Listing '/home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/srv'...
+[20.251s] Compiling '/home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/srv/__init__.py'...
+[20.251s] Compiling '/home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/srv/_set_pose2_d.py'...
+[20.274s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/interfaces_s__rosidl_typesupport_fastrtps_c.so
+[20.275s] -- Set non-toolchain portion of runtime path of "/home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/interfaces_s__rosidl_typesupport_fastrtps_c.so" to ""
+[20.275s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/interfaces_s__rosidl_typesupport_introspection_c.so
+[20.276s] -- Set non-toolchain portion of runtime path of "/home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/interfaces_s__rosidl_typesupport_introspection_c.so" to ""
+[20.276s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/interfaces_s__rosidl_typesupport_c.so
+[20.277s] -- Set non-toolchain portion of runtime path of "/home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages/interfaces/interfaces_s__rosidl_typesupport_c.so" to ""
+[20.279s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_generator_py.so
+[20.279s] -- Set non-toolchain portion of runtime path of "/home/agent1/ros2_ws/src/install/interfaces/lib/libinterfaces__rosidl_generator_py.so" to ""
+[20.279s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/ament_index/resource_index/rust_packages/interfaces
+[20.279s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/rust
+[20.280s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/rust/src
+[20.280s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/rust/src/srv
+[20.280s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/rust/src/srv/rmw.rs
+[20.280s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/rust/src/lib.rs
+[20.280s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/rust/src/srv.rs
+[20.280s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/rust/build.rs
+[20.280s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/rust/Cargo.toml
+[20.281s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/srv/SetPose2D.idl
+[20.281s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/srv/SetPose2D.srv
+[20.281s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/ament_index/resource_index/package_run_dependencies/interfaces
+[20.282s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/ament_index/resource_index/parent_prefix_path/interfaces
+[20.282s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/environment/ament_prefix_path.sh
+[20.282s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/environment/ament_prefix_path.dsv
+[20.282s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/environment/path.sh
+[20.283s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/environment/path.dsv
+[20.283s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/local_setup.bash
+[20.283s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/local_setup.sh
+[20.283s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/local_setup.zsh
+[20.284s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/local_setup.dsv
+[20.284s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/package.dsv
+[20.284s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/ament_index/resource_index/packages/interfaces
+[20.285s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/export_interfaces__rosidl_generator_cExport.cmake
+[20.285s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/export_interfaces__rosidl_generator_cExport-noconfig.cmake
+[20.285s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/export_interfaces__rosidl_typesupport_fastrtps_cExport.cmake
+[20.286s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/export_interfaces__rosidl_typesupport_fastrtps_cExport-noconfig.cmake
+[20.286s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/interfaces__rosidl_typesupport_introspection_cExport.cmake
+[20.286s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/interfaces__rosidl_typesupport_introspection_cExport-noconfig.cmake
+[20.286s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/interfaces__rosidl_typesupport_cExport.cmake
+[20.287s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/interfaces__rosidl_typesupport_cExport-noconfig.cmake
+[20.287s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/export_interfaces__rosidl_generator_cppExport.cmake
+[20.287s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/export_interfaces__rosidl_typesupport_fastrtps_cppExport.cmake
+[20.288s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/export_interfaces__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake
+[20.288s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/interfaces__rosidl_typesupport_introspection_cppExport.cmake
+[20.288s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/interfaces__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+[20.289s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/interfaces__rosidl_typesupport_cppExport.cmake
+[20.289s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/interfaces__rosidl_typesupport_cppExport-noconfig.cmake
+[20.289s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/export_interfaces__rosidl_generator_pyExport.cmake
+[20.290s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/export_interfaces__rosidl_generator_pyExport-noconfig.cmake
+[20.290s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/rosidl_cmake-extras.cmake
+[20.290s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/ament_cmake_export_dependencies-extras.cmake
+[20.290s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/ament_cmake_export_include_directories-extras.cmake
+[20.291s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/ament_cmake_export_libraries-extras.cmake
+[20.291s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/ament_cmake_export_targets-extras.cmake
+[20.291s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[20.292s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[20.292s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/interfacesConfig.cmake
+[20.292s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/cmake/interfacesConfig-version.cmake
+[20.292s] -- Installing: /home/agent1/ros2_ws/src/install/interfaces/share/interfaces/package.xml
+[20.298s] Invoked command in '/home/agent1/ros2_ws/src/build/interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/agent1/ros2_ws/src/install/sdk:/home/agent1/ros2_ws/src/install/ros_robot_controller:/home/agent1/ros2_ws/src/install/peripherals:/home/agent1/ros2_ws/src/install/multi:/home/agent1/ros2_ws/src/install/controller:/opt/ros/jazzy /usr/bin/cmake --install /home/agent1/ros2_ws/src/build/interfaces

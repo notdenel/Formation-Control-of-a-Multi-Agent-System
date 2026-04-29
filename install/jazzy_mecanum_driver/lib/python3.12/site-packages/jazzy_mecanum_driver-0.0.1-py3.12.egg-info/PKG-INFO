@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: jazzy-mecanum-driver
+Version: 0.0.1
+Summary: Single-file ROS 2 Jazzy mecanum drive node
+Maintainer: plancaster
+Maintainer-email: plancaster@scu.edu
+License: TODO

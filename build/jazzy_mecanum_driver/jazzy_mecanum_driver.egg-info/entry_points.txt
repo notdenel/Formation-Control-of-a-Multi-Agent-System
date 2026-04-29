@@ -1,0 +1,2 @@
+[console_scripts]
+jazzy_mecanum_driver = jazzy_mecanum_driver.jazzy_mecanum_driver:main

@@ -1,0 +1,42 @@
+[3.539s] Invoking command in '/home/agent1/ros2_ws/src/driver/ros_robot_controller': PYTHONPATH=/home/agent1/ros2_ws/src/build/ros_robot_controller/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent1/ros2_ws/src/install/ros_robot_controller/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/ros_robot_controller build --build-base /home/agent1/ros2_ws/src/build/ros_robot_controller/build install --record /home/agent1/ros2_ws/src/build/ros_robot_controller/install.log --single-version-externally-managed install_data
+[4.571s] running egg_info
+[4.572s] creating ../../build/ros_robot_controller/ros_robot_controller.egg-info
+[4.621s] writing ../../build/ros_robot_controller/ros_robot_controller.egg-info/PKG-INFO
+[4.623s] writing dependency_links to ../../build/ros_robot_controller/ros_robot_controller.egg-info/dependency_links.txt
+[4.624s] writing entry points to ../../build/ros_robot_controller/ros_robot_controller.egg-info/entry_points.txt
+[4.624s] writing requirements to ../../build/ros_robot_controller/ros_robot_controller.egg-info/requires.txt
+[4.624s] writing top-level names to ../../build/ros_robot_controller/ros_robot_controller.egg-info/top_level.txt
+[4.624s] writing manifest file '../../build/ros_robot_controller/ros_robot_controller.egg-info/SOURCES.txt'
+[4.775s] reading manifest file '../../build/ros_robot_controller/ros_robot_controller.egg-info/SOURCES.txt'
+[4.776s] writing manifest file '../../build/ros_robot_controller/ros_robot_controller.egg-info/SOURCES.txt'
+[4.777s] running build
+[4.777s] running build_py
+[4.777s] creating /home/agent1/ros2_ws/src/build/ros_robot_controller/build
+[4.778s] creating /home/agent1/ros2_ws/src/build/ros_robot_controller/build/lib
+[4.778s] creating /home/agent1/ros2_ws/src/build/ros_robot_controller/build/lib/ros_robot_controller
+[4.778s] copying ros_robot_controller/__init__.py -> /home/agent1/ros2_ws/src/build/ros_robot_controller/build/lib/ros_robot_controller
+[4.779s] copying ros_robot_controller/ros_robot_controller_node.py -> /home/agent1/ros2_ws/src/build/ros_robot_controller/build/lib/ros_robot_controller
+[4.780s] copying ros_robot_controller/ros_robot_controller_sdk.py -> /home/agent1/ros2_ws/src/build/ros_robot_controller/build/lib/ros_robot_controller
+[4.781s] running install
+[4.793s] running install_lib
+[4.834s] creating /home/agent1/ros2_ws/src/install/ros_robot_controller/lib/python3.12/site-packages/ros_robot_controller
+[4.834s] copying /home/agent1/ros2_ws/src/build/ros_robot_controller/build/lib/ros_robot_controller/__init__.py -> /home/agent1/ros2_ws/src/install/ros_robot_controller/lib/python3.12/site-packages/ros_robot_controller
+[4.835s] copying /home/agent1/ros2_ws/src/build/ros_robot_controller/build/lib/ros_robot_controller/ros_robot_controller_node.py -> /home/agent1/ros2_ws/src/install/ros_robot_controller/lib/python3.12/site-packages/ros_robot_controller
+[4.837s] copying /home/agent1/ros2_ws/src/build/ros_robot_controller/build/lib/ros_robot_controller/ros_robot_controller_sdk.py -> /home/agent1/ros2_ws/src/install/ros_robot_controller/lib/python3.12/site-packages/ros_robot_controller
+[4.837s] byte-compiling /home/agent1/ros2_ws/src/install/ros_robot_controller/lib/python3.12/site-packages/ros_robot_controller/__init__.py to __init__.cpython-312.pyc
+[4.838s] byte-compiling /home/agent1/ros2_ws/src/install/ros_robot_controller/lib/python3.12/site-packages/ros_robot_controller/ros_robot_controller_node.py to ros_robot_controller_node.cpython-312.pyc
+[4.847s] byte-compiling /home/agent1/ros2_ws/src/install/ros_robot_controller/lib/python3.12/site-packages/ros_robot_controller/ros_robot_controller_sdk.py to ros_robot_controller_sdk.cpython-312.pyc
+[4.856s] running install_data
+[4.856s] creating /home/agent1/ros2_ws/src/install/ros_robot_controller/share/ament_index
+[4.857s] creating /home/agent1/ros2_ws/src/install/ros_robot_controller/share/ament_index/resource_index
+[4.858s] creating /home/agent1/ros2_ws/src/install/ros_robot_controller/share/ament_index/resource_index/packages
+[4.858s] copying resource/ros_robot_controller -> /home/agent1/ros2_ws/src/install/ros_robot_controller/share/ament_index/resource_index/packages
+[4.860s] copying package.xml -> /home/agent1/ros2_ws/src/install/ros_robot_controller/share/ros_robot_controller
+[4.860s] creating /home/agent1/ros2_ws/src/install/ros_robot_controller/share/ros_robot_controller/launch
+[4.860s] copying launch/ros_robot_controller.launch.py -> /home/agent1/ros2_ws/src/install/ros_robot_controller/share/ros_robot_controller/launch
+[4.862s] running install_egg_info
+[4.904s] Copying ../../build/ros_robot_controller/ros_robot_controller.egg-info to /home/agent1/ros2_ws/src/install/ros_robot_controller/lib/python3.12/site-packages/ros_robot_controller-0.0.0-py3.12.egg-info
+[4.904s] running install_scripts
+[5.567s] Installing ros_robot_controller script to /home/agent1/ros2_ws/src/install/ros_robot_controller/lib/ros_robot_controller
+[5.568s] writing list of installed files to '/home/agent1/ros2_ws/src/build/ros_robot_controller/install.log'
+[5.917s] Invoked command in '/home/agent1/ros2_ws/src/driver/ros_robot_controller' returned '0': PYTHONPATH=/home/agent1/ros2_ws/src/build/ros_robot_controller/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent1/ros2_ws/src/install/ros_robot_controller/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/ros_robot_controller build --build-base /home/agent1/ros2_ws/src/build/ros_robot_controller/build install --record /home/agent1/ros2_ws/src/build/ros_robot_controller/install.log --single-version-externally-managed install_data

@@ -1,1 +1,3 @@
-/home/agent3/ros2_ws/src/driver/ros_robot_controller_msgs/msg/GetPWMServoCmd.msg
+uint8 id
+uint8 get_position
+uint8 get_offset

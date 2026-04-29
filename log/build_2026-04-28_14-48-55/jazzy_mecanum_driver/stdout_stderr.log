@@ -1,0 +1,35 @@
+running egg_info
+creating ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info
+writing ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/PKG-INFO
+writing dependency_links to ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/dependency_links.txt
+writing entry points to ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/entry_points.txt
+writing requirements to ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/requires.txt
+writing top-level names to ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/top_level.txt
+writing manifest file '../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/SOURCES.txt'
+reading manifest file '../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/SOURCES.txt'
+writing manifest file '../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build
+creating /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build/lib
+creating /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build/lib/jazzy_mecanum_driver
+copying jazzy_mecanum_driver/__init__.py -> /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build/lib/jazzy_mecanum_driver
+copying jazzy_mecanum_driver/jazzy_mecanum_driver.py -> /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build/lib/jazzy_mecanum_driver
+running install
+running install_lib
+creating /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages/jazzy_mecanum_driver
+copying /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build/lib/jazzy_mecanum_driver/__init__.py -> /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages/jazzy_mecanum_driver
+copying /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build/lib/jazzy_mecanum_driver/jazzy_mecanum_driver.py -> /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages/jazzy_mecanum_driver
+byte-compiling /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages/jazzy_mecanum_driver/__init__.py to __init__.cpython-312.pyc
+byte-compiling /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages/jazzy_mecanum_driver/jazzy_mecanum_driver.py to jazzy_mecanum_driver.cpython-312.pyc
+running install_data
+creating /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/share/ament_index
+creating /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/share/ament_index/resource_index
+creating /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/share/ament_index/resource_index/packages
+copying resource/jazzy_mecanum_driver -> /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/share/ament_index/resource_index/packages
+copying package.xml -> /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/share/jazzy_mecanum_driver
+running install_egg_info
+Copying ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info to /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages/jazzy_mecanum_driver-0.0.1-py3.12.egg-info
+running install_scripts
+Installing jazzy_mecanum_driver script to /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/jazzy_mecanum_driver
+writing list of installed files to '/home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/install.log'

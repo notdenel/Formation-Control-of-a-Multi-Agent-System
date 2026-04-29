@@ -1,1 +1,2 @@
-/home/agent3/ros2_ws/src/driver/ros_robot_controller_msgs/msg/OLEDState.msg
+uint8 index
+string text

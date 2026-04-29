@@ -1,1 +1,0 @@
-ament_cmake_symlink_install_targets("TARGET_FILES" "/home/agent3/ros2_ws/src/build/ros_robot_controller_msgs/rosidl_generator_py/ros_robot_controller_msgs/ros_robot_controller_msgs_s__rosidl_typesupport_fastrtps_c.so" "TARGETS" "ros_robot_controller_msgs_s__rosidl_typesupport_fastrtps_c" "DESTINATION" "lib/python3.12/site-packages/ros_robot_controller_msgs")

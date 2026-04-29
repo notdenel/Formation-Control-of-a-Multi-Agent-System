@@ -1,0 +1,37 @@
+[2.018s] Invoking command in '/home/agent1/ros2_ws/src/jazzy_mecanum_driver': PYTHONPATH=/home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/jazzy_mecanum_driver build --build-base /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build install --record /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/install.log --single-version-externally-managed install_data
+[2.537s] running egg_info
+[2.540s] creating ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info
+[2.564s] writing ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/PKG-INFO
+[2.565s] writing dependency_links to ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/dependency_links.txt
+[2.567s] writing entry points to ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/entry_points.txt
+[2.567s] writing requirements to ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/requires.txt
+[2.567s] writing top-level names to ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/top_level.txt
+[2.567s] writing manifest file '../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/SOURCES.txt'
+[2.637s] reading manifest file '../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/SOURCES.txt'
+[2.637s] writing manifest file '../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info/SOURCES.txt'
+[2.637s] running build
+[2.637s] running build_py
+[2.637s] creating /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build
+[2.637s] creating /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build/lib
+[2.638s] creating /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build/lib/jazzy_mecanum_driver
+[2.638s] copying jazzy_mecanum_driver/__init__.py -> /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build/lib/jazzy_mecanum_driver
+[2.638s] copying jazzy_mecanum_driver/jazzy_mecanum_driver.py -> /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build/lib/jazzy_mecanum_driver
+[2.638s] running install
+[2.649s] running install_lib
+[2.678s] creating /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages/jazzy_mecanum_driver
+[2.678s] copying /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build/lib/jazzy_mecanum_driver/__init__.py -> /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages/jazzy_mecanum_driver
+[2.678s] copying /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build/lib/jazzy_mecanum_driver/jazzy_mecanum_driver.py -> /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages/jazzy_mecanum_driver
+[2.682s] byte-compiling /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages/jazzy_mecanum_driver/__init__.py to __init__.cpython-312.pyc
+[2.682s] byte-compiling /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages/jazzy_mecanum_driver/jazzy_mecanum_driver.py to jazzy_mecanum_driver.cpython-312.pyc
+[2.690s] running install_data
+[2.690s] creating /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/share/ament_index
+[2.690s] creating /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/share/ament_index/resource_index
+[2.691s] creating /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/share/ament_index/resource_index/packages
+[2.691s] copying resource/jazzy_mecanum_driver -> /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/share/ament_index/resource_index/packages
+[2.691s] copying package.xml -> /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/share/jazzy_mecanum_driver
+[2.691s] running install_egg_info
+[2.724s] Copying ../build/jazzy_mecanum_driver/jazzy_mecanum_driver.egg-info to /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages/jazzy_mecanum_driver-0.0.1-py3.12.egg-info
+[2.727s] running install_scripts
+[2.955s] Installing jazzy_mecanum_driver script to /home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/jazzy_mecanum_driver
+[2.956s] writing list of installed files to '/home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/install.log'
+[3.116s] Invoked command in '/home/agent1/ros2_ws/src/jazzy_mecanum_driver' returned '0': PYTHONPATH=/home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent1/ros2_ws/src/install/jazzy_mecanum_driver/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/jazzy_mecanum_driver build --build-base /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/build install --record /home/agent1/ros2_ws/src/build/jazzy_mecanum_driver/install.log --single-version-externally-managed install_data

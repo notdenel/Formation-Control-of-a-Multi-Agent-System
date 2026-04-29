@@ -1,1 +1,5 @@
-/home/agent3/ros2_ws/src/driver/ros_robot_controller_msgs/msg/RGBState.msg
+int32 index
+uint8 red
+uint8 green
+uint8 blue
+

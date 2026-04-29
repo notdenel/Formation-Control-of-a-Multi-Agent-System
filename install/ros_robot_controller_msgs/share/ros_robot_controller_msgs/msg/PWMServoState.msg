@@ -1,1 +1,3 @@
-/home/agent3/ros2_ws/src/driver/ros_robot_controller_msgs/msg/PWMServoState.msg
+uint16[] id
+uint16[] position
+int16[] offset

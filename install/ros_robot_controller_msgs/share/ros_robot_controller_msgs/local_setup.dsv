@@ -1,1 +1,4 @@
-/home/agent3/ros2_ws/src/build/ros_robot_controller_msgs/ament_cmake_environment_hooks/local_setup.dsv
+source;share/ros_robot_controller_msgs/environment/ament_prefix_path.sh
+source;share/ros_robot_controller_msgs/environment/library_path.sh
+source;share/ros_robot_controller_msgs/environment/path.sh
+source;share/ros_robot_controller_msgs/environment/pythonpath.sh

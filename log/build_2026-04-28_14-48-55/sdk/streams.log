@@ -1,0 +1,49 @@
+[2.653s] Invoking command in '/home/agent1/ros2_ws/src/driver/sdk': PYTHONPATH=/home/agent1/ros2_ws/src/build/sdk/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/sdk build --build-base /home/agent1/ros2_ws/src/build/sdk/build install --record /home/agent1/ros2_ws/src/build/sdk/install.log --single-version-externally-managed install_data
+[3.844s] running egg_info
+[3.845s] creating ../../build/sdk/sdk.egg-info
+[3.887s] writing ../../build/sdk/sdk.egg-info/PKG-INFO
+[3.887s] writing dependency_links to ../../build/sdk/sdk.egg-info/dependency_links.txt
+[3.888s] writing requirements to ../../build/sdk/sdk.egg-info/requires.txt
+[3.888s] writing top-level names to ../../build/sdk/sdk.egg-info/top_level.txt
+[3.890s] writing manifest file '../../build/sdk/sdk.egg-info/SOURCES.txt'
+[3.967s] reading manifest file '../../build/sdk/sdk.egg-info/SOURCES.txt'
+[3.968s] writing manifest file '../../build/sdk/sdk.egg-info/SOURCES.txt'
+[3.968s] running build
+[3.969s] running build_py
+[3.969s] creating /home/agent1/ros2_ws/src/build/sdk/build
+[3.969s] creating /home/agent1/ros2_ws/src/build/sdk/build/lib
+[3.971s] creating /home/agent1/ros2_ws/src/build/sdk/build/lib/sdk
+[3.971s] copying sdk/pid.py -> /home/agent1/ros2_ws/src/build/sdk/build/lib/sdk
+[3.972s] copying sdk/__init__.py -> /home/agent1/ros2_ws/src/build/sdk/build/lib/sdk
+[3.972s] copying sdk/fps.py -> /home/agent1/ros2_ws/src/build/sdk/build/lib/sdk
+[3.972s] copying sdk/common.py -> /home/agent1/ros2_ws/src/build/sdk/build/lib/sdk
+[3.972s] copying sdk/yaml_handle.py -> /home/agent1/ros2_ws/src/build/sdk/build/lib/sdk
+[3.972s] copying sdk/led.py -> /home/agent1/ros2_ws/src/build/sdk/build/lib/sdk
+[3.972s] running install
+[3.982s] running install_lib
+[4.023s] creating /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk
+[4.023s] copying /home/agent1/ros2_ws/src/build/sdk/build/lib/sdk/pid.py -> /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk
+[4.024s] copying /home/agent1/ros2_ws/src/build/sdk/build/lib/sdk/__init__.py -> /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk
+[4.024s] copying /home/agent1/ros2_ws/src/build/sdk/build/lib/sdk/fps.py -> /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk
+[4.024s] copying /home/agent1/ros2_ws/src/build/sdk/build/lib/sdk/common.py -> /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk
+[4.024s] copying /home/agent1/ros2_ws/src/build/sdk/build/lib/sdk/yaml_handle.py -> /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk
+[4.025s] copying /home/agent1/ros2_ws/src/build/sdk/build/lib/sdk/led.py -> /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk
+[4.025s] byte-compiling /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk/pid.py to pid.cpython-312.pyc
+[4.025s] /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk/pid.py:38: SyntaxWarning: invalid escape sequence '\i'
+[4.025s]   """Calculates PID value for given reference feedback
+[4.027s] byte-compiling /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk/__init__.py to __init__.cpython-312.pyc
+[4.027s] byte-compiling /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk/fps.py to fps.cpython-312.pyc
+[4.028s] byte-compiling /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk/common.py to common.cpython-312.pyc
+[4.034s] byte-compiling /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk/yaml_handle.py to yaml_handle.cpython-312.pyc
+[4.036s] byte-compiling /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk/led.py to led.cpython-312.pyc
+[4.037s] running install_data
+[4.038s] creating /home/agent1/ros2_ws/src/install/sdk/share/ament_index
+[4.040s] creating /home/agent1/ros2_ws/src/install/sdk/share/ament_index/resource_index
+[4.040s] creating /home/agent1/ros2_ws/src/install/sdk/share/ament_index/resource_index/packages
+[4.041s] copying resource/sdk -> /home/agent1/ros2_ws/src/install/sdk/share/ament_index/resource_index/packages
+[4.041s] copying package.xml -> /home/agent1/ros2_ws/src/install/sdk/share/sdk
+[4.041s] running install_egg_info
+[4.084s] Copying ../../build/sdk/sdk.egg-info to /home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages/sdk-0.0.0-py3.12.egg-info
+[4.086s] running install_scripts
+[4.353s] writing list of installed files to '/home/agent1/ros2_ws/src/build/sdk/install.log'
+[4.502s] Invoked command in '/home/agent1/ros2_ws/src/driver/sdk' returned '0': PYTHONPATH=/home/agent1/ros2_ws/src/build/sdk/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent1/ros2_ws/src/install/sdk/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/sdk build --build-base /home/agent1/ros2_ws/src/build/sdk/build install --record /home/agent1/ros2_ws/src/build/sdk/install.log --single-version-externally-managed install_data

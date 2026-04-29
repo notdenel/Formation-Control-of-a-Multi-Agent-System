@@ -4,10 +4,10 @@
 
 #include <string.h>
 
+#include "ros_robot_controller_msgs/msg/detail/servo_position__functions.h"
+#include "ros_robot_controller_msgs/msg/detail/servo_position__type_support.h"
 #include "ros_robot_controller_msgs/msg/detail/servo_position__struct.h"
 #include "rosidl_typesupport_interface/macros.h"
-#include "ros_robot_controller_msgs/msg/detail/servo_position__type_support.h"
-#include "ros_robot_controller_msgs/msg/detail/servo_position__functions.h"
 
 #ifdef __cplusplus
 extern "C"

@@ -1,1 +1,10 @@
-/home/agent3/ros2_ws/src/driver/ros_robot_controller_msgs/msg/GetBusServoCmd.msg
+uint8 id
+uint8 get_id
+uint8 get_position
+uint8 get_offset
+uint8 get_voltage
+uint8 get_temperature
+uint8 get_position_limit
+uint8 get_voltage_limit
+uint8 get_max_temperature_limit
+uint8 get_torque_state

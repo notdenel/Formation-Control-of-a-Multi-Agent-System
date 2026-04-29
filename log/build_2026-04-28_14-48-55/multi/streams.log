@@ -1,0 +1,74 @@
+[1.773s] Invoking command in '/home/agent1/ros2_ws/src/multi': PYTHONPATH=/home/agent1/ros2_ws/src/build/multi/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/multi build --build-base /home/agent1/ros2_ws/src/build/multi/build install --record /home/agent1/ros2_ws/src/build/multi/install.log --single-version-externally-managed install_data
+[3.590s] running egg_info
+[3.593s] creating ../build/multi/multi.egg-info
+[3.733s] writing ../build/multi/multi.egg-info/PKG-INFO
+[3.737s] writing dependency_links to ../build/multi/multi.egg-info/dependency_links.txt
+[3.749s] writing entry points to ../build/multi/multi.egg-info/entry_points.txt
+[3.749s] writing requirements to ../build/multi/multi.egg-info/requires.txt
+[3.749s] writing top-level names to ../build/multi/multi.egg-info/top_level.txt
+[3.749s] writing manifest file '../build/multi/multi.egg-info/SOURCES.txt'
+[4.016s] reading manifest file '../build/multi/multi.egg-info/SOURCES.txt'
+[4.016s] writing manifest file '../build/multi/multi.egg-info/SOURCES.txt'
+[4.020s] running build
+[4.022s] running build_py
+[4.022s] creating /home/agent1/ros2_ws/src/build/multi/build
+[4.022s] creating /home/agent1/ros2_ws/src/build/multi/build/lib
+[4.022s] creating /home/agent1/ros2_ws/src/build/multi/build/lib/multi
+[4.026s] copying multi/formation_update.py -> /home/agent1/ros2_ws/src/build/multi/build/lib/multi
+[4.026s] copying multi/tf_listen.py -> /home/agent1/ros2_ws/src/build/multi/build/lib/multi
+[4.029s] copying multi/tf_follower.py -> /home/agent1/ros2_ws/src/build/multi/build/lib/multi
+[4.030s] copying multi/set_odom.py -> /home/agent1/ros2_ws/src/build/multi/build/lib/multi
+[4.031s] copying multi/__init__.py -> /home/agent1/ros2_ws/src/build/multi/build/lib/multi
+[4.041s] copying multi/tf_publish.py -> /home/agent1/ros2_ws/src/build/multi/build/lib/multi
+[4.041s] copying multi/costmap_publish.py -> /home/agent1/ros2_ws/src/build/multi/build/lib/multi
+[4.041s] copying multi/slave_tf_listener.py -> /home/agent1/ros2_ws/src/build/multi/build/lib/multi
+[4.042s] running install
+[4.087s] running install_lib
+[4.194s] creating /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi
+[4.195s] copying /home/agent1/ros2_ws/src/build/multi/build/lib/multi/formation_update.py -> /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi
+[4.199s] copying /home/agent1/ros2_ws/src/build/multi/build/lib/multi/tf_listen.py -> /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi
+[4.199s] copying /home/agent1/ros2_ws/src/build/multi/build/lib/multi/tf_follower.py -> /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi
+[4.201s] copying /home/agent1/ros2_ws/src/build/multi/build/lib/multi/set_odom.py -> /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi
+[4.201s] copying /home/agent1/ros2_ws/src/build/multi/build/lib/multi/__init__.py -> /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi
+[4.201s] copying /home/agent1/ros2_ws/src/build/multi/build/lib/multi/tf_publish.py -> /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi
+[4.201s] copying /home/agent1/ros2_ws/src/build/multi/build/lib/multi/costmap_publish.py -> /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi
+[4.202s] copying /home/agent1/ros2_ws/src/build/multi/build/lib/multi/slave_tf_listener.py -> /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi
+[4.209s] byte-compiling /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi/formation_update.py to formation_update.cpython-312.pyc
+[4.212s] byte-compiling /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi/tf_listen.py to tf_listen.cpython-312.pyc
+[4.216s] byte-compiling /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi/tf_follower.py to tf_follower.cpython-312.pyc
+[4.225s] byte-compiling /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi/set_odom.py to set_odom.cpython-312.pyc
+[4.227s] byte-compiling /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi/__init__.py to __init__.cpython-312.pyc
+[4.228s] byte-compiling /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi/tf_publish.py to tf_publish.cpython-312.pyc
+[4.230s] byte-compiling /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi/costmap_publish.py to costmap_publish.cpython-312.pyc
+[4.234s] byte-compiling /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi/slave_tf_listener.py to slave_tf_listener.cpython-312.pyc
+[4.239s] running install_data
+[4.244s] creating /home/agent1/ros2_ws/src/install/multi/share/ament_index
+[4.244s] creating /home/agent1/ros2_ws/src/install/multi/share/ament_index/resource_index
+[4.244s] creating /home/agent1/ros2_ws/src/install/multi/share/ament_index/resource_index/packages
+[4.244s] copying resource/multi -> /home/agent1/ros2_ws/src/install/multi/share/ament_index/resource_index/packages
+[4.244s] copying package.xml -> /home/agent1/ros2_ws/src/install/multi/share/multi
+[4.245s] creating /home/agent1/ros2_ws/src/install/multi/share/multi/launch
+[4.245s] copying launch/joystick_control_multi.py -> /home/agent1/ros2_ws/src/install/multi/share/multi/launch
+[4.251s] copying launch/joy_control.launch.py -> /home/agent1/ros2_ws/src/install/multi/share/multi/launch
+[4.251s] copying launch/multi_controller.launch.py -> /home/agent1/ros2_ws/src/install/multi/share/multi/launch
+[4.251s] creating /home/agent1/ros2_ws/src/install/multi/share/multi/launch/include
+[4.251s] creating /home/agent1/ros2_ws/src/install/multi/share/multi/config
+[4.251s] copying config/camera_info.yaml -> /home/agent1/ros2_ws/src/install/multi/share/multi/config
+[4.251s] copying config/lidar_filters_config_ld14p.yaml -> /home/agent1/ros2_ws/src/install/multi/share/multi/config
+[4.251s] copying config/usb_cam_param.yaml -> /home/agent1/ros2_ws/src/install/multi/share/multi/config
+[4.252s] copying config/lidar_filters_config_g4.yaml -> /home/agent1/ros2_ws/src/install/multi/share/multi/config
+[4.252s] copying config/lidar_filters_config_a1.yaml -> /home/agent1/ros2_ws/src/install/multi/share/multi/config
+[4.257s] copying config/lidar_filters_config_ld19.yaml -> /home/agent1/ros2_ws/src/install/multi/share/multi/config
+[4.257s] creating /home/agent1/ros2_ws/src/install/multi/share/multi/rviz
+[4.257s] copying rviz/lidar_view.rviz -> /home/agent1/ros2_ws/src/install/multi/share/multi/rviz
+[4.257s] copying rviz/imu_view.rviz -> /home/agent1/ros2_ws/src/install/multi/share/multi/rviz
+[4.258s] running install_egg_info
+[4.382s] Copying ../build/multi/multi.egg-info to /home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages/multi-0.0.0-py3.12.egg-info
+[4.393s] running install_scripts
+[5.116s] Installing costmap_publish script to /home/agent1/ros2_ws/src/install/multi/lib/multi
+[5.120s] Installing formation_update script to /home/agent1/ros2_ws/src/install/multi/lib/multi
+[5.125s] Installing slave_tf_listener script to /home/agent1/ros2_ws/src/install/multi/lib/multi
+[5.125s] Installing tf_listen script to /home/agent1/ros2_ws/src/install/multi/lib/multi
+[5.125s] Installing tf_publish script to /home/agent1/ros2_ws/src/install/multi/lib/multi
+[5.126s] writing list of installed files to '/home/agent1/ros2_ws/src/build/multi/install.log'
+[6.028s] Invoked command in '/home/agent1/ros2_ws/src/multi' returned '0': PYTHONPATH=/home/agent1/ros2_ws/src/build/multi/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent1/ros2_ws/src/install/multi/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/multi build --build-base /home/agent1/ros2_ws/src/build/multi/build install --record /home/agent1/ros2_ws/src/build/multi/install.log --single-version-externally-managed install_data

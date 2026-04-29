@@ -1,0 +1,56 @@
+[1.653s] Invoking command in '/home/agent1/ros2_ws/src/misc': AMENT_PREFIX_PATH=/home/agent1/ros2_ws/src/install/interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/agent1/ros2_ws/src/install/interfaces:${CMAKE_PREFIX_PATH} LD_LIBRARY_PATH=/home/agent1/ros2_ws/src/install/interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/agent1/ros2_ws/src/build/misc/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages:/home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/misc build --build-base /home/agent1/ros2_ws/src/build/misc/build install --record /home/agent1/ros2_ws/src/build/misc/install.log --single-version-externally-managed install_data
+[2.228s] running egg_info
+[2.231s] creating ../build/misc/misc.egg-info
+[2.266s] writing ../build/misc/misc.egg-info/PKG-INFO
+[2.266s] writing dependency_links to ../build/misc/misc.egg-info/dependency_links.txt
+[2.267s] writing entry points to ../build/misc/misc.egg-info/entry_points.txt
+[2.268s] writing requirements to ../build/misc/misc.egg-info/requires.txt
+[2.268s] writing top-level names to ../build/misc/misc.egg-info/top_level.txt
+[2.269s] writing manifest file '../build/misc/misc.egg-info/SOURCES.txt'
+[2.344s] reading manifest file '../build/misc/misc.egg-info/SOURCES.txt'
+[2.345s] writing manifest file '../build/misc/misc.egg-info/SOURCES.txt'
+[2.346s] running build
+[2.346s] running build_py
+[2.346s] creating /home/agent1/ros2_ws/src/build/misc/build
+[2.346s] creating /home/agent1/ros2_ws/src/build/misc/build/lib
+[2.348s] creating /home/agent1/ros2_ws/src/build/misc/build/lib/misc
+[2.348s] copying misc/__init__.py -> /home/agent1/ros2_ws/src/build/misc/build/lib/misc
+[2.348s] copying misc/global_ref_nav.py -> /home/agent1/ros2_ws/src/build/misc/build/lib/misc
+[2.348s] copying misc/slam_pose_relay.py -> /home/agent1/ros2_ws/src/build/misc/build/lib/misc
+[2.348s] copying misc/center_of_mass.py -> /home/agent1/ros2_ws/src/build/misc/build/lib/misc
+[2.349s] running install
+[2.358s] running install_lib
+[2.392s] creating /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc
+[2.393s] copying /home/agent1/ros2_ws/src/build/misc/build/lib/misc/__init__.py -> /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc
+[2.393s] copying /home/agent1/ros2_ws/src/build/misc/build/lib/misc/global_ref_nav.py -> /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc
+[2.396s] copying /home/agent1/ros2_ws/src/build/misc/build/lib/misc/slam_pose_relay.py -> /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc
+[2.396s] copying /home/agent1/ros2_ws/src/build/misc/build/lib/misc/center_of_mass.py -> /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc
+[2.396s] byte-compiling /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc/__init__.py to __init__.cpython-312.pyc
+[2.397s] byte-compiling /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc/global_ref_nav.py to global_ref_nav.cpython-312.pyc
+[2.424s] byte-compiling /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc/slam_pose_relay.py to slam_pose_relay.cpython-312.pyc
+[2.427s] byte-compiling /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc/center_of_mass.py to center_of_mass.cpython-312.pyc
+[2.430s] running install_data
+[2.430s] creating /home/agent1/ros2_ws/src/install/misc/share/ament_index
+[2.430s] creating /home/agent1/ros2_ws/src/install/misc/share/ament_index/resource_index
+[2.431s] creating /home/agent1/ros2_ws/src/install/misc/share/ament_index/resource_index/packages
+[2.434s] copying resource/misc -> /home/agent1/ros2_ws/src/install/misc/share/ament_index/resource_index/packages
+[2.434s] copying package.xml -> /home/agent1/ros2_ws/src/install/misc/share/misc
+[2.434s] creating /home/agent1/ros2_ws/src/install/misc/share/misc/launch
+[2.435s] copying launch/slam_mapping.launch.py -> /home/agent1/ros2_ws/src/install/misc/share/misc/launch
+[2.435s] copying launch/nav_lifelong.launch.py -> /home/agent1/ros2_ws/src/install/misc/share/misc/launch
+[2.435s] creating /home/agent1/ros2_ws/src/install/misc/share/misc/config
+[2.435s] copying config/amcl_params.yaml -> /home/agent1/ros2_ws/src/install/misc/share/misc/config
+[2.435s] copying config/mapper_params_mapping.yaml -> /home/agent1/ros2_ws/src/install/misc/share/misc/config
+[2.436s] copying config/mapper_params_lifelong.yaml -> /home/agent1/ros2_ws/src/install/misc/share/misc/config
+[2.437s] creating /home/agent1/ros2_ws/src/install/misc/share/misc/rviz
+[2.438s] copying rviz/navigation.rviz -> /home/agent1/ros2_ws/src/install/misc/share/misc/rviz
+[2.438s] copying rviz/slam_mapping.rviz -> /home/agent1/ros2_ws/src/install/misc/share/misc/rviz
+[2.438s] creating /home/agent1/ros2_ws/src/install/misc/share/misc/maps
+[2.438s] running install_egg_info
+[2.489s] Copying ../build/misc/misc.egg-info to /home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages/misc-0.0.1-py3.12.egg-info
+[2.494s] running install_scripts
+[2.874s] Installing center_of_mass script to /home/agent1/ros2_ws/src/install/misc/lib/misc
+[2.875s] Installing global_ref_nav script to /home/agent1/ros2_ws/src/install/misc/lib/misc
+[2.878s] Installing slam_pose_relay script to /home/agent1/ros2_ws/src/install/misc/lib/misc
+[2.878s] writing list of installed files to '/home/agent1/ros2_ws/src/build/misc/install.log'
+[3.046s] Invoked command in '/home/agent1/ros2_ws/src/misc' returned '0': AMENT_PREFIX_PATH=/home/agent1/ros2_ws/src/install/interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/agent1/ros2_ws/src/install/interfaces:${CMAKE_PREFIX_PATH} LD_LIBRARY_PATH=/home/agent1/ros2_ws/src/install/interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/agent1/ros2_ws/src/build/misc/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/agent1/ros2_ws/src/install/misc/lib/python3.12/site-packages:/home/agent1/ros2_ws/src/install/interfaces/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/misc build --build-base /home/agent1/ros2_ws/src/build/misc/build install --record /home/agent1/ros2_ws/src/build/misc/install.log --single-version-externally-managed install_data

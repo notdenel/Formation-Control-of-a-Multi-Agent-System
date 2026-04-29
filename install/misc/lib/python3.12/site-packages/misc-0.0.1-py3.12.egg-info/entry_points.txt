@@ -1,0 +1,4 @@
+[console_scripts]
+center_of_mass = misc.center_of_mass:main
+global_ref_nav = misc.global_ref_nav:main
+slam_pose_relay = misc.slam_pose_relay:main
