@@ -45,12 +45,14 @@ def launch_setup(context):
     lidar_frame = '{}lidar_frame'.format(frame_prefix)
     imu_frame = '{}imu_link'.format(frame_prefix)
 
+    # controller and rf2o have no source tree — always resolve from the install index.
+    # peripherals source matches install, so use source when uncompiled for live edits.
+    controller_package_path = get_package_share_directory('controller')
+    rf2o_package_path = get_package_share_directory('rf2o_laser_odometry')
     if compiled == 'True':
         peripherals_package_path = get_package_share_directory('peripherals')
-        controller_package_path = get_package_share_directory('controller')
     else:
         peripherals_package_path = '/home/agent3/ros2_ws/src/peripherals'
-        controller_package_path = '/home/agent3/ros2_ws/src/driver/controller'
 
     controller_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -88,6 +90,11 @@ def launch_setup(context):
         condition=UnlessCondition(use_depth_camera)
     )
 
+    rf2o_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(rf2o_package_path, 'launch/rf2o_laser_odometry.launch.py')),
+    )
+
     joystick_control_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(peripherals_package_path, 'launch/joystick_control.launch.py')),
@@ -110,6 +117,7 @@ def launch_setup(context):
         action_name_arg,
         controller_launch,
         lidar_launch,
+        rf2o_launch,
         joystick_control_launch,
     ]
 

@@ -3,9 +3,9 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch_ros.actions import Node
 from nav2_common.launch import RewrittenYaml
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, OpaqueFunction, TimerAction
 from launch import LaunchDescription, LaunchService
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import Command, LaunchConfiguration
 
 def launch_setup(context):
     compiled = os.environ.get('need_compile', 'False')
@@ -46,8 +46,6 @@ def launch_setup(context):
         ('/map', 'map'),
         ('/map_metadata', 'map_metadata'),
     ]
-    if enable_save == 'false':
-        remappings.append(('/slam_toolbox/save_map', '/save_map'))
 
     sync_node = Node(
         package='slam_toolbox',
@@ -58,15 +56,67 @@ def launch_setup(context):
         remappings=remappings
     )
 
-    return [
+    # robot_state_publisher broadcasts the static TF tree from the URDF
+    # (base_footprint → base_link → lidar_frame).  Without it slam_toolbox
+    # drops every scan with "frame 'lidar_frame' … discarding message".
+    mentorpi_pkg = get_package_share_directory('mentorpi_description')
+    urdf_path = os.path.join(mentorpi_pkg, 'urdf', 'mentorpi.xacro')
+    robot_state_publisher = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        name='robot_state_publisher',
+        output='screen',
+        parameters=[{
+            'robot_description': Command(['xacro ', urdf_path]),
+            'use_sim_time': use_sim_time,
+        }],
+        remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
+    )
+
+    # nav2_lifecycle_manager configures and activates slam_toolbox automatically.
+    # bond_timeout 0.0 disables the heartbeat check — slam_toolbox does not send
+    # lifecycle bonds, so the default 4 s timeout would abort bringup.
+    # Delayed 2 s to give the node time to fully register before configure is called.
+    lifecycle_manager = TimerAction(
+        period=2.0,
+        actions=[Node(
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager_slam',
+            output='screen',
+            parameters=[{
+                'use_sim_time': use_sim_time,
+                'autostart': True,
+                'bond_timeout': 0.0,
+                'node_names': ['slam_toolbox'],
+            }],
+        )],
+    )
+
+    actions = [
         enable_save_arg,
         use_sim_time_arg,
         map_frame_arg,
         odom_frame_arg,
         base_frame_arg,
         scan_topic_arg,
-        sync_node
+        robot_state_publisher,
+        sync_node,
+        lifecycle_manager,
     ]
+
+    # Launched only when enable_save is true.  Provides
+    # ~/save_map (Trigger) — call it when the map is ready:
+    #   ros2 service call /map_save_node/save_map std_srvs/srv/Trigger
+    if enable_save == 'true':
+        actions.append(Node(
+            package='slam',
+            executable='map_save',
+            name='map_save_node',
+            output='screen',
+        ))
+
+    return actions
 
 def generate_launch_description():
     return LaunchDescription([

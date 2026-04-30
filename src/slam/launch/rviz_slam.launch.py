@@ -14,7 +14,7 @@ def launch_setup(context):
         desc_pkg = get_package_share_directory('mentorpi_description')
     else:
         slam_pkg = '/home/agent3/ros2_ws/src/slam'
-        desc_pkg = '/home/agent3/ros2_ws/src/simulations/mentorpi_description'
+        desc_pkg = '/home/agent3/ros2_ws/src/mentorpi_description'
 
     urdf_path = os.path.join(desc_pkg, 'urdf/mentorpi.xacro')
     rviz_config = os.path.join(slam_pkg, 'rviz/slam.rviz')

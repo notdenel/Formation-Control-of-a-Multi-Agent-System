@@ -8,8 +8,8 @@ def generate_launch_description():
     # 声明参数(declare parameter)
     robot_name_arg = DeclareLaunchArgument(
         'robot_name',
-        default_value=os.environ.get('HOST', 'localhost'),
-        description='Name of the robot'
+        default_value='',
+        description='Robot namespace (empty = no namespace, matches controller default)'
     )
 
     # 设置ROS命名空间(set ROS naming space)

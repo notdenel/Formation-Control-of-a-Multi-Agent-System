@@ -20,7 +20,7 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='agent3',
+    maintainer='agent3', #ROBOT SPECIFIC
     maintainer_email='benjbanh@gmail.com',
     description='SLAM package for ROS2 Jazzy with SLAM Toolbox',
     license='Apache-2.0',
