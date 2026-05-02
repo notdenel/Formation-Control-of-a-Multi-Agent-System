@@ -6,6 +6,7 @@ from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, OpaqueFunction
+from pathlib import Path
 
 def launch_setup(context):
     compiled = os.environ.get('need_compile', 'False')
@@ -52,7 +53,7 @@ def launch_setup(context):
     if compiled == 'True':
         peripherals_package_path = get_package_share_directory('peripherals')
     else:
-        peripherals_package_path = '/home/agent1/ros2_ws/src/peripherals'
+        peripherals_package_path = str(Path.home() / 'ros2_ws/src/peripherals')
 
     controller_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(

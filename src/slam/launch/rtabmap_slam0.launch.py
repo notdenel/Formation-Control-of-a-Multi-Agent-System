@@ -6,6 +6,7 @@ from launch import LaunchDescription
 from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction, OpaqueFunction, TimerAction
+from pathlib import Path
 
 def launch_setup(context):
     compiled = os.environ['need_compile']
@@ -32,7 +33,7 @@ def launch_setup(context):
     if compiled == 'True':
         slam_package_path = get_package_share_directory('slam')
     else:
-        slam_package_path = '/home/ubuntu/ros2_ws/src/slam'
+        slam_package_path = str(Path.home() / 'ros2_ws/src/slam')
 
     base_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(

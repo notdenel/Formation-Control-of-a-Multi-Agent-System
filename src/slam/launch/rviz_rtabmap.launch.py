@@ -3,6 +3,7 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription, LaunchService
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, GroupAction, IncludeLaunchDescription, ExecuteProcess
+from pathlib import Path
 
 def launch_setup(context):
     compiled = os.environ['need_compile']
@@ -10,7 +11,7 @@ def launch_setup(context):
     if compiled == 'True':
         slam_package_path = get_package_share_directory('slam')
     else:
-        slam_package_path = '/home/ubuntu/ros2_ws/src/slam'
+        slam_package_path = str(Path.home() / 'ros2_ws/src/slam')
 
     rviz_node = ExecuteProcess(
             cmd=['rviz2', 'rviz2', '-d', os.path.join(slam_package_path, 'rviz/rtabmap.rviz')],

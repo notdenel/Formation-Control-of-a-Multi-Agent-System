@@ -5,6 +5,7 @@ from launch_ros.actions import Node
 from launch import LaunchDescription, LaunchService
 from launch.actions import OpaqueFunction
 from launch.substitutions import Command
+from pathlib import Path
 
 def launch_setup(context):
     compiled = os.environ.get('need_compile', 'False')
@@ -13,8 +14,8 @@ def launch_setup(context):
         slam_pkg = get_package_share_directory('slam')
         desc_pkg = get_package_share_directory('mentorpi_description')
     else:
-        slam_pkg = '/home/agent1/ros2_ws/src/slam'
-        desc_pkg = '/home/agent1/ros2_ws/src/mentorpi_description'
+        slam_pkg = str(Path.home() / 'ros2_ws/src/slam')
+        desc_pkg = str(Path.home() / 'ros2_ws/src/mentorpi_description')
 
     urdf_path = os.path.join(desc_pkg, 'urdf/mentorpi.xacro')
     rviz_config = os.path.join(slam_pkg, 'rviz/slam.rviz')

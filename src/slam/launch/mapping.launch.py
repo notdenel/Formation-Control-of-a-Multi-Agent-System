@@ -27,7 +27,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription, LaunchService
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import IncludeLaunchDescription, OpaqueFunction, TimerAction
-
+from pathlib import Path
 
 def launch_setup(context):
     compiled = os.environ.get('need_compile', 'False')
@@ -38,9 +38,9 @@ def launch_setup(context):
         controller_pkg  = get_package_share_directory('controller')
         peripherals_pkg = get_package_share_directory('peripherals')
     else:
-        slam_pkg        = '/home/agent1/ros2_ws/src/slam'
-        controller_pkg  = '/home/agent1/ros2_ws/src/driver/controller'
-        peripherals_pkg = '/home/agent1/ros2_ws/src/peripherals'
+        slam_pkg        = str(Path.home() / 'ros2_ws/src/slam')
+        controller_pkg  = str(Path.home() / 'ros2_ws/src/driver/controller')
+        peripherals_pkg = str(Path.home() / 'ros2_ws/src/peripherals')
 
     # C++ package — always use the installed share directory.
     rf2o_pkg = get_package_share_directory('rf2o_laser_odometry')

@@ -24,7 +24,7 @@ from launch import LaunchDescription, LaunchService
 from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
-
+from pathlib import Path
 
 def launch_setup(context):
     compiled = os.environ.get('need_compile', 'False')
@@ -43,7 +43,7 @@ def launch_setup(context):
     if compiled == 'True':
         slam_package_path = get_package_share_directory('slam')
     else:
-        slam_package_path = '/home/agent1/ros2_ws/src/slam'
+        slam_package_path = str(Path.home() / 'ros2_ws/src/slam')
 
     slam_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(

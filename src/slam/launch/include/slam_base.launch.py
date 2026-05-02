@@ -6,6 +6,7 @@ from nav2_common.launch import RewrittenYaml
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, TimerAction
 from launch import LaunchDescription, LaunchService
 from launch.substitutions import Command, LaunchConfiguration
+from pathlib import Path
 
 def launch_setup(context):
     compiled = os.environ.get('need_compile', 'False')
@@ -26,7 +27,7 @@ def launch_setup(context):
     if compiled == 'True':
         slam_package_path = get_package_share_directory('slam')
     else:
-        slam_package_path = '/home/agent1/ros2_ws/src/slam'
+        slam_package_path = str(Path.home() / 'ros2_ws/src/slam')
 
     slam_params = RewrittenYaml(
         source_file=os.path.join(slam_package_path, 'config/slam.yaml'),
