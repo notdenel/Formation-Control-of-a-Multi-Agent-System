@@ -17,13 +17,14 @@
 
   <Domain id="any">
     <General>
-      <!-- Change to your actual network interface (ip link show to find it) -->
+      <!-- wlan0 is the active interface (eth0 has no carrier) -->
       <Interfaces>
-        <NetworkInterface name="eth0" priority="default" multicast="default"/>
+        <NetworkInterface name="wlan0" priority="default" multicast="default"/>
       </Interfaces>
       <!-- Disable multicast — rely solely on static unicast peers below -->
       <AllowMulticast>false</AllowMulticast>
       <EnableMulticastLoopback>false</EnableMulticastLoopback>
+      <MaxMessageSize>65500B</MaxMessageSize>
     </General>
 
     <Discovery>
@@ -44,11 +45,6 @@
       <ParticipantIndex>auto</ParticipantIndex>
       <MaxAutoParticipantIndex>32</MaxAutoParticipantIndex>
     </Discovery>
-
-    <Internal>
-      <!-- Prevents excessive retransmits on a reliable local network -->
-      <MaxMessageSize>65500B</MaxMessageSize>
-    </Internal>
 
     <Tracing>
       <Verbosity>warning</Verbosity>

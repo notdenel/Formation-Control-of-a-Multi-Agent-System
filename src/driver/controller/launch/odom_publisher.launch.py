@@ -3,68 +3,77 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription, LaunchService
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch_ros.actions import Node, PushRosNamespace
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import (
+    DeclareLaunchArgument, GroupAction, IncludeLaunchDescription, OpaqueFunction,
+)
 
 
-def generate_launch_description():
-    namespace = LaunchConfiguration('namespace', default='')
-    use_namespace = LaunchConfiguration('use_namespace', default='false')
-    odom_frame = LaunchConfiguration('odom_frame', default='odom')
-    base_frame = LaunchConfiguration('base_frame', default='base_footprint')
-    imu_frame = LaunchConfiguration('imu_frame', default='imu_link')
-    frame_prefix = LaunchConfiguration('frame_prefix', default='')
+def launch_setup(context):
+    namespace     = LaunchConfiguration('namespace').perform(context)
+    use_namespace = LaunchConfiguration('use_namespace').perform(context)
+    odom_frame    = LaunchConfiguration('odom_frame').perform(context)
+    base_frame    = LaunchConfiguration('base_frame').perform(context)
+    imu_frame     = LaunchConfiguration('imu_frame').perform(context)
 
-    namespace_arg = DeclareLaunchArgument('namespace', default_value=namespace)
-    use_namespace_arg = DeclareLaunchArgument('use_namespace', default_value=use_namespace)
-    odom_frame_arg = DeclareLaunchArgument('odom_frame', default_value=odom_frame)
-    base_frame_arg = DeclareLaunchArgument('base_frame', default_value=base_frame)
-    imu_frame_arg = DeclareLaunchArgument('imu_frame', default_value=imu_frame)
-    frame_prefix_arg = DeclareLaunchArgument('frame_prefix', default_value=frame_prefix)
+    robot_controller_pkg = get_package_share_directory('ros_robot_controller')
+    controller_pkg       = get_package_share_directory('controller')
 
-    robot_controller_package_path = get_package_share_directory('ros_robot_controller')
-    controller_package_path = get_package_share_directory('controller')
-
+    # Hardware driver — subscribes to ~/set_motor, ~/set_led etc. (tilde topics).
+    # Placing it in the robot namespace makes those topics resolve to
+    # /robotX/ros_robot_controller/set_motor, which odom_publisher publishes to
+    # via the relative "ros_robot_controller/set_motor" topic (also in namespace).
     robot_controller_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(robot_controller_package_path, 'launch/ros_robot_controller.launch.py')
+            os.path.join(robot_controller_pkg, 'launch/ros_robot_controller.launch.py')
         ),
-        launch_arguments={
-            'imu_frame': imu_frame,
-        }.items()
+        launch_arguments={'imu_frame': imu_frame}.items(),
     )
 
+    # Motor driver + wheel odometry publisher.
+    # Subscribes to "controller/cmd_vel" (relative).
+    # In namespace /robotX this becomes /robotX/controller/cmd_vel, so only
+    # teleop that publishes to /robotX/controller/cmd_vel drives this robot.
     odom_publisher_node = Node(
         package='controller',
         executable='odom_publisher',
         name='odom_publisher',
         output='screen',
         parameters=[
-            os.path.join(controller_package_path, 'config/calibrate_params.yaml'),
+            os.path.join(controller_pkg, 'config/calibrate_params.yaml'),
             {
                 'base_frame_id': base_frame,
                 'odom_frame_id': odom_frame,
                 'pub_odom_topic': True,
-            }
+            },
         ],
     )
 
+    nodes = [robot_controller_launch, odom_publisher_node]
+
+    if use_namespace == 'true' and namespace:
+        # Wrap both nodes in the robot namespace so cmd_vel and motor topics
+        # are isolated per robot — prevents cross-robot teleop bleed.
+        return [GroupAction([PushRosNamespace(namespace)] + nodes)]
+
+    return nodes
+
+
+def generate_launch_description():
     return LaunchDescription([
-        namespace_arg,
-        use_namespace_arg,
-        odom_frame_arg,
-        base_frame_arg,
-        imu_frame_arg,
-        frame_prefix_arg,
-        robot_controller_launch,
-        odom_publisher_node,
+        DeclareLaunchArgument('namespace',     default_value=''),
+        DeclareLaunchArgument('use_namespace', default_value='false'),
+        DeclareLaunchArgument('odom_frame',    default_value='odom'),
+        DeclareLaunchArgument('base_frame',    default_value='base_footprint'),
+        DeclareLaunchArgument('imu_frame',     default_value='imu_link'),
+        DeclareLaunchArgument('frame_prefix',  default_value=''),
+        OpaqueFunction(function=launch_setup),
     ])
 
 
 if __name__ == '__main__':
     ld = generate_launch_description()
-
     ls = LaunchService()
     ls.include_launch_description(ld)
     ls.run()
