@@ -52,7 +52,7 @@ def launch_setup(context):
     if compiled == 'True':
         peripherals_package_path = get_package_share_directory('peripherals')
     else:
-        peripherals_package_path = '/home/agent3/ros2_ws/src/peripherals'
+        peripherals_package_path = '/home/agent1/ros2_ws/src/peripherals'
 
     controller_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(

@@ -20,7 +20,7 @@ slam_toolbox:
     use_map_saver: true
 
     # ── Map loading (override at launch time via map_file_name arg) ───────────
-    # map_file_name: /home/agent3/ros2_ws/src/misc/maps/my_map
+    # map_file_name: /home/agent1/ros2_ws/src/misc/maps/my_map
     # map_start_pose: [0.0, 0.0, 0.0]
 
     # ── Lifelong-specific parameters ──────────────────────────────────────────

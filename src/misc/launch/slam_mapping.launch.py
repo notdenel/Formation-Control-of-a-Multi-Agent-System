@@ -29,7 +29,7 @@ Workflow
   # Save map when done (saves .yaml + .pgm for nav2 AND .posegraph for lifelong):
   ros2 run nav2_map_server map_saver_cli -f ~/ros2_ws/src/misc/maps/my_map
   ros2 service call /slam_toolbox/save_map slam_toolbox/srv/SaveMap \
-      "{name: {data: '/home/agent3/ros2_ws/src/misc/maps/my_map'}}"
+      "{name: {data: '/home/agent1/ros2_ws/src/misc/maps/my_map'}}"
 """
 
 import os

@@ -16,7 +16,7 @@ Usage
 -----
   source ~/ros2_ws/setup_env.sh
   ros2 launch misc nav_lifelong.launch.py \
-      map_file:=/home/agent3/ros2_ws/src/misc/maps/my_map
+      map_file:=/home/agent1/ros2_ws/src/misc/maps/my_map
 
   # Set a new center-of-mass target (map frame, metres):
   ros2 service call /center_of_mass/set_position interfaces/srv/SetPose2D \

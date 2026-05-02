@@ -7,12 +7,17 @@
   <maintainer email="benjbanh@gmail.com">agent1</maintainer>
   <license>Apache-2.0</license>
 
+  <exec_depend>rmw_cyclonedds_cpp</exec_depend>
+  <exec_depend>nav2_costmap_2d</exec_depend>
+  <exec_depend>rf2o_laser_odometry</exec_depend>
   <exec_depend>nav2_map_server</exec_depend>
   <exec_depend>nav2_amcl</exec_depend>
   <exec_depend>nav2_lifecycle_manager</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
   <exec_depend>launch_ros</exec_depend>
 
   <test_depend>ament_copyright</test_depend>

@@ -15,7 +15,9 @@ setup(
         (os.path.join('share', package_name, 'launch'),
             glob(os.path.join('launch', '*.py'))),
         (os.path.join('share', package_name, 'config'),
-            glob(os.path.join('config', '*.yaml'))),
+            glob(os.path.join('config', '*.yaml')) +
+            glob(os.path.join('config', '*.xml')) +
+            glob(os.path.join('config', '*.sh'))),
         (os.path.join('share', package_name, 'config', 'maps'),
             glob(os.path.join('config', 'maps', '*'))),
         (os.path.join('share', package_name, 'rviz'),
@@ -32,6 +34,7 @@ setup(
         'console_scripts': [
             'pose_aggregator = multi_robot_bringup.pose_aggregator:main',
             'robot_pose_broadcaster = multi_robot_bringup.robot_pose_broadcaster:main',
+            'pose_normalizer = multi_robot_bringup.pose_normalizer:main',
         ],
     },
 )
