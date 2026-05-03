@@ -26,7 +26,7 @@ else:
     LIN_VEL = 0.2
     ANG_VEL = LIN_VEL/(0.145/math.tan(0.698))
 msg = """
-Control Your Robot!
+penis
 ---------------------------
 Moving around:
         w
@@ -62,8 +62,18 @@ class TeleopControl(Node):
     def __init__(self, name):
         super().__init__(name)
 
-        self.cmd_vel = self.create_publisher(Twist, "controller/cmd_vel", 1)
-        self.servo_state_pub = self.create_publisher(SetPWMServoState, 'ros_robot_controller/pwm_servo/set_state', 1)
+        # self.cmd_vel = self.create_publisher(Twist, "controller/cmd_vel", 1)
+        # self.servo_state_pub = self.create_publisher(SetPWMServoState, 'ros_robot_controller/pwm_servo/set_state', 1)
+
+        self.declare_parameter('cmd_vel_topic', 'controller/cmd_vel')
+        self.declare_parameter('servo_state_topic', 'ros_robot_controller/pwm_servo/set_state')
+        
+        cmd_vel_topic = self.get_parameter('cmd_vel_topic').get_parameter_value().string_value
+        servo_state_topic = self.get_parameter('servo_state_topic').get_parameter_value().string_value
+        
+        self.get_logger().info(f'Teleop publishing cmd_vel to: {cmd_vel_topic}')
+        self.cmd_vel = self.create_publisher(Twist, cmd_vel_topic, 1)
+        self.servo_state_pub = self.create_publisher(SetPWMServoState, servo_state_topic, 1)
 
     def run_control_loop(self):
         control_linear_vel = 0.0

@@ -21,6 +21,9 @@ def launch_setup(context):
     imu_frame = LaunchConfiguration('imu_frame', default='imu_link')
     frame_prefix = LaunchConfiguration('frame_prefix', default='')
 
+    # namespaced launch configuration
+    cmd_vel_topic = LaunchConfiguration('cmd_vel_topic', default='controller/cmd_vel')
+
     namespace_arg = DeclareLaunchArgument('namespace', default_value=namespace)
     use_namespace_arg = DeclareLaunchArgument('use_namespace', default_value=use_namespace)
     use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value=use_sim_time)
@@ -30,6 +33,13 @@ def launch_setup(context):
     base_frame_arg = DeclareLaunchArgument('base_frame', default_value=base_frame)
     imu_frame_arg = DeclareLaunchArgument('imu_frame', default_value=imu_frame)
     frame_prefix_arg = DeclareLaunchArgument('frame_prefix', default_value=frame_prefix)
+
+    # namespaced argument declaration
+    cmd_vel_topic_arg = DeclareLaunchArgument(
+        'cmd_vel_topic',
+        default_value=cmd_vel_topic,
+        description='command velocity topic for this robot'
+    )
 
     peripherals_package_path = get_package_share_directory('peripherals')
     controller_package_path = get_package_share_directory('controller')
@@ -44,7 +54,8 @@ def launch_setup(context):
             'imu_frame': imu_frame,
             'frame_prefix': frame_prefix,
             'base_frame': base_frame,
-            'odom_frame': odom_frame
+            'odom_frame': odom_frame,
+            'cmd_vel_topic': cmd_vel_topic,
         }.items()
     )
 
@@ -75,7 +86,8 @@ def launch_setup(context):
             ('/tf', 'tf'),
             ('/tf_static', 'tf_static'),
             ('odometry/filtered', 'odom'),
-            ('cmd_vel', 'controller/cmd_vel')
+            # ('cmd_vel', 'controller/cmd_vel')
+            ('cmd_vel', cmd_vel_topic)
         ],
         condition=IfCondition(enable_odom),
     )
@@ -90,6 +102,7 @@ def launch_setup(context):
         map_frame_arg,
         imu_frame_arg,
         frame_prefix_arg,
+        cmd_vel_topic_arg,
         imu_filter_launch,
         odom_publisher_launch,
         ekf_filter_node,

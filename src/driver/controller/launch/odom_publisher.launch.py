@@ -16,6 +16,9 @@ def launch_setup(context):
     odom_frame    = LaunchConfiguration('odom_frame').perform(context)
     base_frame    = LaunchConfiguration('base_frame').perform(context)
     imu_frame     = LaunchConfiguration('imu_frame').perform(context)
+    
+    # new explicitly namespaced command velocity topic
+    cmd_vel_topic = LaunchConfiguration('cmd_vel_topic').perform(context)
 
     robot_controller_pkg = get_package_share_directory('ros_robot_controller')
     controller_pkg       = get_package_share_directory('controller')
@@ -48,6 +51,11 @@ def launch_setup(context):
                 'pub_odom_topic': True,
             },
         ],
+        
+        # explicit command topic, which makes it easier to verify
+        remappings=[
+            ('controller/cmd_vel', cmd_vel_topic),
+        ],
     )
 
     nodes = [robot_controller_launch, odom_publisher_node]
@@ -68,6 +76,14 @@ def generate_launch_description():
         DeclareLaunchArgument('base_frame',    default_value='base_footprint'),
         DeclareLaunchArgument('imu_frame',     default_value='imu_link'),
         DeclareLaunchArgument('frame_prefix',  default_value=''),
+        
+        # namespace resolution behavior
+        DeclareLaunchArgument(
+            'cmd_vel_topic',
+            default_value='controller/cmd_vel',
+            description='command velocity topic consumed by odom_publisher'
+        ),
+        
         OpaqueFunction(function=launch_setup),
     ])
 
