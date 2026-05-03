@@ -75,10 +75,10 @@ def launch_setup(context, *args, **kwargs):
     # Publishes: /{robot_name}/scan_raw   (raw, unfiltered)
     #            /{robot_name}/scan       (filtered, used by AMCL and rf2o)
     lidar_group = GroupAction([
-        PushRosNamespace(robot_name),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(lidar_launch),
             launch_arguments={
+                'robot_name':  robot_name,
                 'scan_raw':    'scan_raw',
                 'lidar_frame': f'{robot_name}/lidar_frame',
             }.items(),

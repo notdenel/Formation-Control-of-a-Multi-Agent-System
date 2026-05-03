@@ -2,11 +2,15 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 from launch import LaunchDescription, LaunchService
-from launch.actions import IncludeLaunchDescription
+from launch.substitutions import LaunchConfiguration
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
+from launch_ros.actions import PushRosNamespace
 
 def generate_launch_description():
+    robot_name = LaunchConfiguration('robot_name')
+
     robot_controller_package_path = get_package_share_directory('ros_robot_controller')
     peripherals_package_path = get_package_share_directory('peripherals')
 
@@ -44,6 +48,14 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        # Declare namespace
+        DeclareLaunchArgument(
+            'robot_name',
+            default_value='robot1'
+        ),
+        # Apply namespace to everything below
+        PushRosNamespace(robot_name),
+        
         robot_controller_launch,
         tf_broadcaster_imu_node,
         imu_filter_launch,

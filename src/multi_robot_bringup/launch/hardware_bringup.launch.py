@@ -61,11 +61,11 @@ def launch_setup(context, *args, **kwargs):
     # PushRosNamespace makes the relative 'scan_raw' topic resolve to
     # /robot1/scan_raw inside the group — same logic as real_robot.launch.py.
     lidar_group = GroupAction([
-        PushRosNamespace(robot_name),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(lidar_launch),
             launch_arguments={
-                'scan_raw': 'scan_raw',   # keep this
+                'robot_name':  robot_name,
+                'scan_raw':    'scan_raw',
                 'lidar_frame': f'{robot_name}/lidar_frame',
             }.items(),
         )
