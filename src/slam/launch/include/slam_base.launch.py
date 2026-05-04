@@ -5,12 +5,11 @@ from launch_ros.actions import Node
 from nav2_common.launch import RewrittenYaml
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, TimerAction
 from launch import LaunchDescription, LaunchService
-from launch.substitutions import Command, LaunchConfiguration
+from launch.substitutions import LaunchConfiguration
 
 
 def launch_setup(context):
-    # Use .get() so the launch file doesn't crash when the env var is unset.
-    # compiled = os.environ.get('need_compile', 'False')
+    compiled = os.environ.get('need_compile', 'False')
 
     enable_save  = LaunchConfiguration('enable_save',  default='true').perform(context)
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
@@ -27,7 +26,7 @@ def launch_setup(context):
     scan_topic_arg   = DeclareLaunchArgument('scan_topic',   default_value=scan_topic)
 
     slam_package_path = get_package_share_directory('slam')
-    
+
     slam_params = RewrittenYaml(
         source_file=os.path.join(slam_package_path, 'config/slam.yaml'),
         param_rewrites={
@@ -35,17 +34,17 @@ def launch_setup(context):
             'map_frame':    map_frame,
             'odom_frame':   odom_frame,
             'base_frame':   base_frame,
-            'scan_topic':   scan_topic,   # FIX: was missing — caused wrong scan topic
+            'scan_topic':   scan_topic,
         },
         convert_types=True
     )
 
-    # Standard TF + map topic remappings — no save_map remapping here.
     remappings = [
-        ('/tf',            'tf'),
-        ('/tf_static',     'tf_static'),
-        ('/map',           'map'),
-        ('/map_metadata',  'map_metadata'),
+        ('/tf',           'tf'),
+        ('/tf_static',    'tf_static'),
+        ('/map',          'map'),
+        ('/map_metadata', 'map_metadata'),
+        ('scan', 'scan_raw'),
     ]
 
     sync_node = Node(
@@ -57,33 +56,22 @@ def launch_setup(context):
         remappings=remappings,
     )
 
-    # FIX: robot_state_publisher was missing entirely.
-    # It broadcasts the static TF tree from the URDF
-    # (base_footprint → base_link → lidar_frame).  Without it slam_toolbox
-    # cannot resolve the sensor frame and discards every scan, which causes
-    # the map-ghosting / double-overlay seen in the image.
-    mentorpi_pkg = get_package_share_directory('mentorpi_description')
-    urdf_path    = os.path.join(mentorpi_pkg, 'urdf', 'mentorpi.xacro')
+    # NOTE: robot_state_publisher is intentionally NOT launched here.
+    # It is already started by controller.launch.py (bringup).  Launching a
+    # second instance here causes two nodes to publish /tf_static for the same
+    # frames (base_footprint → lidar_frame), producing conflicting transforms
+    # that slam_toolbox sees as the sensor jumping between poses on every scan —
+    # the direct cause of the multiple-ghost-outline artifact in the map image.
+    # If you ever run slam_base.launch.py standalone (without bringup), you must
+    # start robot_state_publisher separately before launching this file.
 
-    robot_state_publisher = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        output='screen',
-        parameters=[{
-            'robot_description': Command(['xacro ', urdf_path]),
-            'use_sim_time': use_sim_time,
-        }],
-        remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
-    )
-
-    # FIX: lifecycle_manager was missing.
-    # nav2_lifecycle_manager configures and activates slam_toolbox automatically.
-    # bond_timeout 0.0 disables the heartbeat check — slam_toolbox does not send
-    # lifecycle bonds, so the default 4 s timeout would abort bringup.
-    # Delayed 2 s to give the node time to fully register before configure is called.
+    # Lifecycle manager configures and activates slam_toolbox automatically.
+    # bond_timeout 0.0 disables the heartbeat check (slam_toolbox sends no bonds).
+    # Period raised from 2 s → 5 s: on a Pi under load at startup the node may
+    # not finish registering within 2 s, causing a silent configure-abort that
+    # leaves slam_toolbox accepting scans in an uninitialised state.
     lifecycle_manager = TimerAction(
-        period=2.0,
+        period=5.0,
         actions=[Node(
             package='nav2_lifecycle_manager',
             executable='lifecycle_manager',
@@ -105,7 +93,6 @@ def launch_setup(context):
         odom_frame_arg,
         base_frame_arg,
         scan_topic_arg,
-        robot_state_publisher,
         sync_node,
         lifecycle_manager,
     ]

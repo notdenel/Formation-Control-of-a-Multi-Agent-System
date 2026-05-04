@@ -1,14 +1,25 @@
+import os
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import TimerAction
-
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
-    # imu_complementary_filter: reads raw accel+gyro, outputs fused orientation.
-    # Input topic remapped directly from the hardware driver's raw IMU topic.
-    # imu_calib (apply_calib) is not available in ROS 2 Jazzy apt repositories,
-    # so raw data goes straight to the filter; add calibration here if you
-    # build imu_calib from source later.
+    calib_file_path = os.path.join(
+        get_package_share_directory('calibration'), 'config/imu_calib.yaml')
+
+    imu_calib_node = Node(
+        package='calibration',
+        executable='apply_calib',
+        name='imu_calib',
+        output='screen',
+        parameters=[{'calib_file': calib_file_path}],
+        remappings=[
+            ('raw', '/ros_robot_controller/imu_raw'),
+            ('corrected', 'imu_corrected'),
+        ]
+    )
+
     imu_filter_node = Node(
         package='imu_complementary_filter',
         executable='complementary_filter_node',
@@ -16,25 +27,25 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {
-                'use_mag': False,
+                'use_mag': True,
                 'do_bias_estimation': True,
                 'do_adaptive_gain': True,
-                'publish_debug_topics': False,
+                'publish_debug_topics': True
             }
         ],
         remappings=[
-            ('/imu/data_raw', '/ros_robot_controller/imu_raw'),
-            ('imu/data', 'imu'),
+            ('/tf', 'tf'),
+            ('/imu/data_raw', 'imu_corrected'),
+            ('imu/data', 'imu')
         ]
     )
 
     return LaunchDescription([
         TimerAction(
-            period=3.0,
-            actions=[imu_filter_node]
+            period=5.0,
+            actions=[imu_calib_node, imu_filter_node]
         )
     ])
-
 
 if __name__ == '__main__':
     from launch import LaunchService

@@ -358,7 +358,7 @@ class RosRobotController(Node):
             msg.angular_velocity.y = math.radians(gy)
             msg.angular_velocity.z = math.radians(gz)
 
-            msg.orientation_covariance = [0.01, 0.0, 0.0,
+            msg.orientation_covariance = [-1.0, 0.0, 0.0,
                                           0.0, 0.01, 0.0,
                                           0.0, 0.0, 0.01]
             msg.angular_velocity_covariance = [0.01, 0.0, 0.0,

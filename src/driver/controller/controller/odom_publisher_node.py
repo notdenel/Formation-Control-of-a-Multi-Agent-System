@@ -23,7 +23,7 @@ ODOM_POSE_COVARIANCE = list(map(float,
 
 ODOM_POSE_COVARIANCE_STOP = list(map(float, 
                             [1e-9, 0, 0, 0, 0, 0, 
-                             0, 1e-3, 1e-9, 0, 0, 0,
+                             0, 1e-9, 0, 0, 0, 0,
                              0, 0, 1e6, 0, 0, 0,
                              0, 0, 0, 1e6, 0, 0,
                              0, 0, 0, 0, 1e6, 0,

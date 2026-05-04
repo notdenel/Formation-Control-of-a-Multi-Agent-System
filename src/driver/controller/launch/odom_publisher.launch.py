@@ -50,6 +50,18 @@ def generate_launch_description():
         ],
     )
 
+    lidar_tf_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='lidar_tf_publisher',
+        arguments=[
+            '--x', '0', '--y', '0', '--z', '0',
+            '--yaw', '0', '--pitch', '0', '--roll', '0',
+            '--frame-id', 'base_footprint',
+            '--child-frame-id', 'lidar_frame'
+        ]
+    )
+
     return LaunchDescription([
         namespace_arg,
         use_namespace_arg,
@@ -59,6 +71,7 @@ def generate_launch_description():
         frame_prefix_arg,
         robot_controller_launch,
         odom_publisher_node,
+        lidar_tf_publisher,
     ])
 
 
