@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  CycloneDDS static peer discovery for 3 robots on a shared network.
+
+  EDIT THESE IPs to match your actual robot static IPs before deploying.
+  Set CYCLONEDDS_URI to the path of this file on each robot:
+    export CYCLONEDDS_URI=/home/agent1/ros2_ws/src/multi_robot_bringup/config/cyclone_dds.xml
+  Or source setup_env.sh which does this automatically.
+
+  All three robots must be on the same ROS_DOMAIN_ID (default 0 is fine for
+  an isolated network; change if you share a network with other ROS2 systems).
+-->
+<CycloneDDS
+  xmlns="https://cdds.io/config"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
+
+  <Domain id="any">
+    <General>
+      <!-- wlan0 is the active interface (eth0 has no carrier) -->
+      <Interfaces>
+        <NetworkInterface name="wlan0" priority="default" multicast="default"/>
+      </Interfaces>
+      <!-- Disable multicast — rely solely on static unicast peers below -->
+      <AllowMulticast>false</AllowMulticast>
+      <EnableMulticastLoopback>false</EnableMulticastLoopback>
+      <MaxMessageSize>65500B</MaxMessageSize>
+    </General>
+
+    <Discovery>
+      <!--
+        Static peer list — every robot lists the other two robots' IPs.
+        All three robots must have the same list.
+
+        REPLACE with your actual static IPs:
+          robot1 → 192.168.1.101
+          robot2 → 192.168.1.102
+          robot3 → 192.168.1.103
+      -->
+      <Peers>
+        <Peer address="172.31.113.136"/><!-- Agent 1-->
+        <Peer address="172.31.89.63"/>  <!-- Agent 2-->
+        <Peer address="172.31.115.94"/> <!-- Agent 3-->
+      </Peers>
+      <ParticipantIndex>auto</ParticipantIndex>
+      <MaxAutoParticipantIndex>32</MaxAutoParticipantIndex>
+    </Discovery>
+
+    <Tracing>
+      <Verbosity>warning</Verbosity>
+      <OutputFile>stderr</OutputFile>
+    </Tracing>
+  </Domain>
+</CycloneDDS>
