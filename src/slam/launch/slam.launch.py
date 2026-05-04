@@ -1,16 +1,5 @@
 """
-All-in-one SLAM mapping launch — starts robot drivers AND slam_toolbox together.
-
-Run from a single terminal on the Pi:
-  ros2 launch slam slam.launch.py
-
-Run teleop from WSL to drive while mapping:
-  ros2 run peripherals teleop_key_control
-
-When the map looks complete, save it:
-  ros2 service call /map_save_node/save_map std_srvs/srv/Trigger
-
-Map is written to ~/ros2_ws/src/slam/maps/map_01.pgm + map_01.yaml
+DOES NOT WORK
 """
 import os
 
@@ -44,10 +33,9 @@ def launch_setup(context):
     base_frame = f'{frame_prefix}base_footprint'
     scan_topic = f'{frame_prefix}scan_raw'
 
-    if compiled == 'True':
-        slam_package_path = get_package_share_directory('slam')
-    else:
-        slam_package_path = '/home/agent3/ros2_ws/src/slam'
+    compiled = os.environ.get('need_compile', 'False').strip().lower() == 'true'
+    
+    slam_package_path = get_package_share_directory('slam')
 
     # -----------------------
     # Robot drivers (controller + lidar)

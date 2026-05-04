@@ -27,7 +27,8 @@ sudo apt install -y \
   ros-jazzy-imu-complementary-filter \
   ros-jazzy-navigation2 \
   ros-jazzy-nav2-bringup \
-  ros-jazzy-slam-toolbox
+  ros-jazzy-slam-toolbox \
+  ros-jazzy-rmw-cyclonedds-cpp
 
 echo "[INFO] Installing udev rules..."
 sudo cp config/udev/99-senior-design-robot.rules /etc/udev/rules.d/

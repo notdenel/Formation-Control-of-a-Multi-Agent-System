@@ -38,9 +38,9 @@ def launch_setup(context):
         controller_pkg  = get_package_share_directory('controller')
         peripherals_pkg = get_package_share_directory('peripherals')
     else:
-        slam_pkg        = '/home/agent3/ros2_ws/src/slam'
-        controller_pkg  = '/home/agent3/ros2_ws/src/driver/controller'
-        peripherals_pkg = '/home/agent3/ros2_ws/src/peripherals'
+        slam_pkg        = '/home/agent1/ros2_ws/src/slam'
+        controller_pkg  = '/home/agent1/ros2_ws/src/driver/controller'
+        peripherals_pkg = '/home/agent1/ros2_ws/src/peripherals'
 
     # C++ package — always use the installed share directory.
     rf2o_pkg = get_package_share_directory('rf2o_laser_odometry')
