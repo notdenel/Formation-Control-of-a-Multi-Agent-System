@@ -35,6 +35,9 @@ setup(
             'pose_aggregator = navigation.pose_aggregator:main',
             'robot_pose_broadcaster = navigation.robot_pose_broadcaster:main',
             'pose_normalizer = navigation.pose_normalizer:main',
+            'aggregation = navigation.aggregation:main',
+            'formation_control = navigation.formation_control:main',
+            'formation_control_3 = navigation.formation_control_3:main',
         ],
     },
 )

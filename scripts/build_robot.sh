@@ -8,7 +8,9 @@ if [ ! -f /opt/ros/jazzy/setup.bash ]; then
   exit 1
 fi
 
+set +u
 source /opt/ros/jazzy/setup.bash
+set -u
 
 export MAKEFLAGS="-j1"
 export CMAKE_BUILD_PARALLEL_LEVEL=1
@@ -19,7 +21,6 @@ rm -rf build install log
 echo "[INFO] Building base workspace packages, skipping rf2o_laser_odometry and navigation first..."
 colcon build \
   --symlink-install \
-  --parallel-workers 1 \
   --packages-skip rf2o_laser_odometry navigation
 
 source "$HOME/ros2_ws/install/setup.bash"
