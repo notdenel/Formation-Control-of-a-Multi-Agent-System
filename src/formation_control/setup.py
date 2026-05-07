@@ -22,7 +22,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'goto_goal_node = formation_control.goto_goal_node:main',
+            'goto_goal_node = formation_control.simple_aggregation:main',
+            'simple_aggregation = formation_control.simple_aggregation:main',
         ],
     },
 )

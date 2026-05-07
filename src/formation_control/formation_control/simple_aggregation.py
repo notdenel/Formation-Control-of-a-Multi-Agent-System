@@ -30,7 +30,7 @@ class GoToGoal(Node):
         self.declare_parameter('max_speed', 0.25)        # m/s
         self.declare_parameter('goal_tolerance', 0.20)   # metres
         self.declare_parameter('ga', 1.0)                # proportional gain
-        self.declare_parameter('odom_topic', '/odom')
+        self.declare_parameter('odom_topic', 'odom')
         self.declare_parameter('cmd_vel_topic', 'controller/cmd_vel')
 
         odom_topic = self.get_parameter('odom_topic').value

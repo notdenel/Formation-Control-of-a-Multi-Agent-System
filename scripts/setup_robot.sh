@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+cd "$HOME/ros2_ws"
+
 echo "[INFO] Installing system dependencies..."
 sudo apt update
 sudo apt install -y \
@@ -44,18 +46,49 @@ cat > "$HOME/software/Servo_upper_computer/servo_config.yaml" <<'YAML'
 {}
 YAML
 
-echo "[INFO] Updating bashrc ROS environment block..."
+echo "[INFO] Cleaning old ROS environment lines from .bashrc..."
+sed -i '/# >>> senior design ros2 networking >>>/,/# <<< senior design ros2 networking <<</d' "$HOME/.bashrc"
 sed -i '/# >>> senior design ros2 >>>/,/# <<< senior design ros2 <<</d' "$HOME/.bashrc"
 
+sed -i \
+  -e '/^export ROS_DOMAIN_ID=/d' \
+  -e '/^export RMW_IMPLEMENTATION=/d' \
+  -e '/^export ROS_AUTOMATIC_DISCOVERY_RANGE=/d' \
+  -e '/^export ROS_STATIC_PEERS=/d' \
+  -e '/^export ROS_LOCALHOST_ONLY=/d' \
+  -e '/^export CYCLONEDDS_URI=/d' \
+  -e '/^export MACHINE_TYPE=/d' \
+  -e '/^export LIDAR_TYPE=/d' \
+  -e '/^export ROBOT_NAME=/d' \
+  "$HOME/.bashrc"
+
+echo "[INFO] Writing senior design ROS environment block..."
 cat >> "$HOME/.bashrc" <<'BASHRC'
 
 # >>> senior design ros2 >>>
 source /opt/ros/jazzy/setup.bash
-source ~/ros2_ws/install/setup.bash
+
+if [ -f "$HOME/ros2_ws/install/setup.bash" ]; then
+  source "$HOME/ros2_ws/install/setup.bash"
+fi
+
+case "$(hostname)" in
+  agent1) export ROBOT_NAME=robot1 ;;
+  agent2) export ROBOT_NAME=robot2 ;;
+  agent3) export ROBOT_NAME=robot3 ;;
+  *) export ROBOT_NAME="${ROBOT_NAME:-robot}" ;;
+esac
+
 export ROS_DOMAIN_ID=10
-export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/navigation/config/cyclone_dds.xml
 export MACHINE_TYPE=MentorPi_Mecanum
+export LIDAR_TYPE=LD19
+
+unset ROS_AUTOMATIC_DISCOVERY_RANGE
+unset ROS_STATIC_PEERS
+unset ROS_LOCALHOST_ONLY
 # <<< senior design ros2 <<<
 BASHRC
 
-echo "[INFO] Setup complete. Reboot recommended."
+echo "[INFO] Setup complete. Reboot recommended because dialout group membership and udev rules may require a new login."

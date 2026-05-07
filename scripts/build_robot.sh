@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eo pipefail
+set -euo pipefail
 
 cd "$HOME/ros2_ws"
 
@@ -13,20 +13,34 @@ source /opt/ros/jazzy/setup.bash
 export MAKEFLAGS="-j1"
 export CMAKE_BUILD_PARALLEL_LEVEL=1
 
-RF2O_CACHE="$HOME/.ros2_rf2o_cache"
-
+echo "[INFO] Cleaning workspace build/install/log..."
 rm -rf build install log
 
-if [ -d "$RF2O_CACHE" ]; then
-  echo "[INFO] Restoring rf2o from cache..."
-  mkdir -p install
-  cp -r "$RF2O_CACHE" install/rf2o_laser_odometry
-  source install/rf2o_laser_odometry/local_setup.bash 2>/dev/null || true
-fi
+echo "[INFO] Building base workspace packages, skipping rf2o_laser_odometry and navigation first..."
+colcon build \
+  --symlink-install \
+  --parallel-workers 1 \
+  --packages-skip rf2o_laser_odometry navigation
 
-echo "[INFO] Building full workspace with parallel workers limited to 1..."
-colcon build --symlink-install --parallel-workers 1 --packages-skip rf2o_laser_odometry
+source "$HOME/ros2_ws/install/setup.bash"
+
+echo "[INFO] Building rf2o_laser_odometry..."
+colcon build \
+  --symlink-install \
+  --parallel-workers 1 \
+  --packages-select rf2o_laser_odometry \
+  --event-handlers console_direct+ \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+source "$HOME/ros2_ws/install/setup.bash"
+
+echo "[INFO] Building navigation..."
+colcon build \
+  --symlink-install \
+  --parallel-workers 1 \
+  --packages-select navigation
+
+source "$HOME/ros2_ws/install/setup.bash"
 
 echo "[INFO] Build complete."
 echo "[INFO] Run: source ~/.bashrc"
-# echo "[INFO] Run: source ~/ros2_ws/install/setup.bash"

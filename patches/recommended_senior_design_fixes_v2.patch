@@ -1,0 +1,181 @@
+diff --git a/scripts/setup_robot.sh b/scripts/setup_robot.sh
+index 6107d73..2e933ed 100755
+--- a/scripts/setup_robot.sh
++++ b/scripts/setup_robot.sh
+@@ -52,9 +52,16 @@ cat >> "$HOME/.bashrc" <<'BASHRC'
+ # >>> senior design ros2 >>>
+ source /opt/ros/jazzy/setup.bash
+ source ~/ros2_ws/install/setup.bash
++# Keep this value identical on every robot and any laptop/RViz terminal.
++# Use 10 because it was the last domain known to work in your earlier tests.
++# If the team confirms the latest start_nav tests used 0, change BOTH this file
++# and src/navigation/config/setup_env.sh to 0 together.
+ export ROS_DOMAIN_ID=10
+-export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
++export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
++export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/navigation/config/cyclone_dds.xml
+ export MACHINE_TYPE=MentorPi_Mecanum
++export LIDAR_TYPE=LD19
++unset ROS_AUTOMATIC_DISCOVERY_RANGE
+ # <<< senior design ros2 <<<
+ BASHRC
+ 
+diff --git a/src/formation_control/formation_control/simple_aggregation.py b/src/formation_control/formation_control/simple_aggregation.py
+index 4b7eea3..e7bd043 100644
+--- a/src/formation_control/formation_control/simple_aggregation.py
++++ b/src/formation_control/formation_control/simple_aggregation.py
+@@ -30,7 +30,7 @@ class GoToGoal(Node):
+         self.declare_parameter('max_speed', 0.25)        # m/s
+         self.declare_parameter('goal_tolerance', 0.20)   # metres
+         self.declare_parameter('ga', 1.0)                # proportional gain
+-        self.declare_parameter('odom_topic', '/odom')
++        self.declare_parameter('odom_topic', 'odom')
+         self.declare_parameter('cmd_vel_topic', 'controller/cmd_vel')
+ 
+         odom_topic = self.get_parameter('odom_topic').value
+diff --git a/src/formation_control/launch/simple_aggregation.launch.py b/src/formation_control/launch/simple_aggregation.launch.py
+index e5bb2f3..57afb44 100644
+--- a/src/formation_control/launch/simple_aggregation.launch.py
++++ b/src/formation_control/launch/simple_aggregation.launch.py
+@@ -1,39 +1,48 @@
+ from launch import LaunchDescription
+-from launch.actions import DeclareLaunchArgument
++from launch.actions import DeclareLaunchArgument, GroupAction
+ from launch.substitutions import LaunchConfiguration
+-from launch_ros.actions import Node
++from launch_ros.actions import Node, PushRosNamespace
+ 
+ 
+ def generate_launch_description():
++    robot_name = LaunchConfiguration('robot_name')
++
+     return LaunchDescription([
++        DeclareLaunchArgument(
++            'robot_name',
++            default_value='',
++            description='Robot namespace, e.g. robot1, robot2, robot3. Empty means no namespace.'),
+         DeclareLaunchArgument('goal_x',          default_value='1.0',
+-                              description='Goal X in odom frame (metres)'),
++                              description='Goal X in the selected odom/map frame, metres'),
+         DeclareLaunchArgument('goal_y',          default_value='0.0',
+-                              description='Goal Y in odom frame (metres)'),
++                              description='Goal Y in the selected odom/map frame, metres'),
+         DeclareLaunchArgument('max_speed',       default_value='0.25',
+-                              description='Maximum linear speed (m/s)'),
++                              description='Maximum linear speed in m/s'),
+         DeclareLaunchArgument('goal_tolerance',  default_value='0.20',
+-                              description='Stop radius around goal (metres)'),
++                              description='Stop radius around goal in metres'),
+         DeclareLaunchArgument('ga',              default_value='1.0',
+-                              description='Proportional gain (speed = ga * distance, capped)'),
+-        DeclareLaunchArgument('odom_topic',      default_value='/odom',
+-                              description='Odometry topic to localise from'),
++                              description='Proportional gain: speed = ga * distance, capped'),
++        DeclareLaunchArgument('odom_topic',      default_value='odom',
++                              description='Relative odometry topic. With robot_name:=robot2, resolves to /robot2/odom'),
+         DeclareLaunchArgument('cmd_vel_topic',   default_value='controller/cmd_vel',
+-                              description='Twist command topic consumed by the motor driver'),
++                              description='Relative Twist command topic. With robot_name:=robot2, resolves to /robot2/controller/cmd_vel'),
+ 
+-        Node(
+-            package='simple_aggregation',
+-            executable='simple_aggregation',
+-            name='simple_aggregation',
+-            parameters=[{
+-                'goal_x':         LaunchConfiguration('goal_x'),
+-                'goal_y':         LaunchConfiguration('goal_y'),
+-                'max_speed':      LaunchConfiguration('max_speed'),
+-                'goal_tolerance': LaunchConfiguration('goal_tolerance'),
+-                'ga':             LaunchConfiguration('ga'),
+-                'odom_topic':     LaunchConfiguration('odom_topic'),
+-                'cmd_vel_topic':  LaunchConfiguration('cmd_vel_topic'),
+-            }],
+-            output='screen',
+-        ),
++        GroupAction([
++            PushRosNamespace(robot_name),
++            Node(
++                package='formation_control',
++                executable='goto_goal_node',
++                name='goto_goal',
++                parameters=[{
++                    'goal_x':         LaunchConfiguration('goal_x'),
++                    'goal_y':         LaunchConfiguration('goal_y'),
++                    'max_speed':      LaunchConfiguration('max_speed'),
++                    'goal_tolerance': LaunchConfiguration('goal_tolerance'),
++                    'ga':             LaunchConfiguration('ga'),
++                    'odom_topic':     LaunchConfiguration('odom_topic'),
++                    'cmd_vel_topic':  LaunchConfiguration('cmd_vel_topic'),
++                }],
++                output='screen',
++            ),
++        ]),
+     ])
+diff --git a/src/formation_control/setup.py b/src/formation_control/setup.py
+index 43b63f1..34b6be7 100644
+--- a/src/formation_control/setup.py
++++ b/src/formation_control/setup.py
+@@ -22,7 +22,8 @@ setup(
+     tests_require=['pytest'],
+     entry_points={
+         'console_scripts': [
+-            'goto_goal_node = formation_control.goto_goal_node:main',
++            'goto_goal_node = formation_control.simple_aggregation:main',
++            'simple_aggregation = formation_control.simple_aggregation:main',
+         ],
+     },
+ )
+diff --git a/src/navigation/config/cyclone_dds.xml b/src/navigation/config/cyclone_dds.xml
+index 965673a..7a08436 100644
+--- a/src/navigation/config/cyclone_dds.xml
++++ b/src/navigation/config/cyclone_dds.xml
+@@ -4,11 +4,12 @@
+ 
+   EDIT THESE IPs to match your actual robot static IPs before deploying.
+   Set CYCLONEDDS_URI to the path of this file on each robot:
+-    export CYCLONEDDS_URI=/home/agent1/ros2_ws/src/navigation/config/cyclone_dds.xml
++    export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/navigation/config/cyclone_dds.xml
+   Or source setup_env.sh which does this automatically.
+ 
+-  All three robots must be on the same ROS_DOMAIN_ID (default 0 is fine for
+-  an isolated network; change if you share a network with other ROS2 systems).
++  All three robots must be on the same ROS_DOMAIN_ID. This project currently
++  standardizes on domain 10 because that was the last known working domain in
++  earlier multi-robot tests. Domain 0 is also fine if every robot/terminal uses it.
+ -->
+ <CycloneDDS
+   xmlns="https://cdds.io/config"
+diff --git a/src/navigation/config/setup_env.sh b/src/navigation/config/setup_env.sh
+index c5e8da8..caca374 100644
+--- a/src/navigation/config/setup_env.sh
++++ b/src/navigation/config/setup_env.sh
+@@ -14,11 +14,14 @@ export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+ 
+ # ── Static peer discovery config ─────────────────────────────────────────────
+ # Points CycloneDDS at the XML file that lists all robot IPs.
+-export CYCLONEDDS_URI=~/ros2_ws/src/navigation/config/cyclone_dds.xml
++export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/navigation/config/cyclone_dds.xml
+ 
+ # ── ROS domain: keep all three robots on the same isolated domain ─────────────
+-# Change this if you share a LAN with other ROS2 systems.
+-export ROS_DOMAIN_ID=0
++# This must match on every robot and laptop/RViz terminal.
++# Use 10 because it was the last domain known to work in earlier multi-robot tests.
++# If the team confirms the latest start_nav tests used 0, change this and
++# scripts/setup_robot.sh to 0 together.
++export ROS_DOMAIN_ID=10
+ 
+ # ── Robot identity ────────────────────────────────────────────────────────────
+ # Uncomment the ONE line that matches THIS robot, or set in ~/.bashrc directly.
+@@ -27,7 +30,10 @@ export ROS_DOMAIN_ID=0
+ # export ROBOT_NAME=robot2
+ 
+ # ── Hardware profile (required by peripherals and controller packages) ─────────
+-export MACHINE_TYPE=MentorPi_Acker   # adjust to your platform
++export MACHINE_TYPE=MentorPi_Mecanum  # mecanum base: enables linear.x, linear.y, angular.z
+ export LIDAR_TYPE=LD19               # adjust to your lidar model
+ 
++# Avoid restricting ROS discovery to localhost during multi-robot testing.
++unset ROS_AUTOMATIC_DISCOVERY_RANGE
++
+ echo "[setup_env] RMW=${RMW_IMPLEMENTATION}  DOMAIN=${ROS_DOMAIN_ID}  ROBOT=${ROBOT_NAME:-unset}"

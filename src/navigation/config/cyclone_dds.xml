@@ -2,13 +2,18 @@
 <!--
   CycloneDDS static peer discovery for 3 robots on a shared network.
 
-  EDIT THESE IPs to match your actual robot static IPs before deploying.
+  Static peer IPs for the current three-robot setup:
+    agent1 / robot1: 172.31.113.136
+    agent2 / robot2: 172.31.89.63
+    agent3 / robot3: 172.31.115.94
+
   Set CYCLONEDDS_URI to the path of this file on each robot:
-    export CYCLONEDDS_URI=/home/agent1/ros2_ws/src/navigation/config/cyclone_dds.xml
+    export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/navigation/config/cyclone_dds.xml
   Or source setup_env.sh which does this automatically.
 
-  All three robots must be on the same ROS_DOMAIN_ID (default 0 is fine for
-  an isolated network; change if you share a network with other ROS2 systems).
+  All three robots must be on the same ROS_DOMAIN_ID. This project currently
+  standardizes on domain 10 because that was the last known working domain in
+  earlier multi-robot tests. Domain 0 is also fine if every robot/terminal uses it.
 -->
 <CycloneDDS
   xmlns="https://cdds.io/config"
@@ -29,18 +34,19 @@
 
     <Discovery>
       <!--
-        Static peer list — every robot lists the other two robots' IPs.
-        All three robots must have the same list.
+        Static peer list for the current robot fleet.
+        Keep this same file on all three robots. Including all three robot IPs on
+        every robot is fine and avoids needing per-robot XML variants.
 
-        REPLACE with your actual static IPs:
-          robot1 → 192.168.1.101
-          robot2 → 192.168.1.102
-          robot3 → 192.168.1.103
+        If you run RViz or a centralized controller from a laptop on a multicast-
+        blocked network, the laptop should also use this XML. If laptop discovery
+        is still unreliable, add the laptop's current Wi-Fi IP here too.
       -->
       <Peers>
-        <Peer address="172.31.113.136"/><!-- Agent 1-->
-        <Peer address="172.31.89.63"/>  <!-- Agent 2-->
-        <Peer address="172.31.115.94"/> <!-- Agent 3-->
+        <Peer address="127.0.0.1"/> <!-- localhost / same-machine CLI -->
+        <Peer address="172.31.113.136"/> <!-- agent1 / robot1 -->
+        <Peer address="172.31.89.63"/>  <!-- agent2 / robot2 -->
+        <Peer address="172.31.115.94"/> <!-- agent3 / robot3 -->
       </Peers>
       <ParticipantIndex>auto</ParticipantIndex>
       <MaxAutoParticipantIndex>32</MaxAutoParticipantIndex>

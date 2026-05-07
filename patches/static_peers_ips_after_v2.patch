@@ -1,0 +1,70 @@
+diff --git a/scripts/setup_robot.sh b/scripts/setup_robot.sh
+index 2e933ed..4fb81ea 100644
+--- a/scripts/setup_robot.sh
++++ b/scripts/setup_robot.sh
+@@ -62,6 +62,8 @@ export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/navigation/config/cyclone_dds.xml
+ export MACHINE_TYPE=MentorPi_Mecanum
+ export LIDAR_TYPE=LD19
+ unset ROS_AUTOMATIC_DISCOVERY_RANGE
++# We are using CycloneDDS XML peers, not the older/nonstandard ROS_STATIC_PEERS env.
++unset ROS_STATIC_PEERS
+ # <<< senior design ros2 <<<
+ BASHRC
+ 
+diff --git a/src/navigation/config/cyclone_dds.xml b/src/navigation/config/cyclone_dds.xml
+index 7a08436..7209779 100644
+--- a/src/navigation/config/cyclone_dds.xml
++++ b/src/navigation/config/cyclone_dds.xml
+@@ -2,7 +2,11 @@
+ <!--
+   CycloneDDS static peer discovery for 3 robots on a shared network.
+ 
+-  EDIT THESE IPs to match your actual robot static IPs before deploying.
++  Static peer IPs for the current three-robot setup:
++    agent1 / robot1: 172.31.113.136
++    agent2 / robot2: 172.31.89.63
++    agent3 / robot3: 172.31.115.94
++
+   Set CYCLONEDDS_URI to the path of this file on each robot:
+     export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/navigation/config/cyclone_dds.xml
+   Or source setup_env.sh which does this automatically.
+@@ -30,18 +34,18 @@
+ 
+     <Discovery>
+       <!--
+-        Static peer list — every robot lists the other two robots' IPs.
+-        All three robots must have the same list.
++        Static peer list for the current robot fleet.
++        Keep this same file on all three robots. Including all three robot IPs on
++        every robot is fine and avoids needing per-robot XML variants.
+ 
+-        REPLACE with your actual static IPs:
+-          robot1 → 192.168.1.101
+-          robot2 → 192.168.1.102
+-          robot3 → 192.168.1.103
++        If you run RViz or a centralized controller from a laptop on a multicast-
++        blocked network, the laptop should also use this XML. If laptop discovery
++        is still unreliable, add the laptop's current Wi-Fi IP here too.
+       -->
+       <Peers>
+-        <Peer address="172.31.113.136"/><!-- Agent 1-->
+-        <Peer address="172.31.89.63"/>  <!-- Agent 2-->
+-        <Peer address="172.31.115.94"/> <!-- Agent 3-->
++        <Peer address="172.31.113.136"/> <!-- agent1 / robot1 -->
++        <Peer address="172.31.89.63"/>  <!-- agent2 / robot2 -->
++        <Peer address="172.31.115.94"/> <!-- agent3 / robot3 -->
+       </Peers>
+       <ParticipantIndex>auto</ParticipantIndex>
+       <MaxAutoParticipantIndex>32</MaxAutoParticipantIndex>
+diff --git a/src/navigation/config/setup_env.sh b/src/navigation/config/setup_env.sh
+index caca374..2b86248 100644
+--- a/src/navigation/config/setup_env.sh
++++ b/src/navigation/config/setup_env.sh
+@@ -35,5 +35,7 @@ export LIDAR_TYPE=LD19               # adjust to your lidar model
+ 
+ # Avoid restricting ROS discovery to localhost during multi-robot testing.
+ unset ROS_AUTOMATIC_DISCOVERY_RANGE
++# We are using CycloneDDS XML peers, not the older/nonstandard ROS_STATIC_PEERS env.
++unset ROS_STATIC_PEERS
+ 
+ echo "[setup_env] RMW=${RMW_IMPLEMENTATION}  DOMAIN=${ROS_DOMAIN_ID}  ROBOT=${ROBOT_NAME:-unset}"

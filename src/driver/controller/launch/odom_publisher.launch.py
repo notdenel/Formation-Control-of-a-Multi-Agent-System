@@ -56,9 +56,9 @@ def generate_launch_description():
         name='lidar_tf_publisher',
         arguments=[
             '--x', '0', '--y', '0', '--z', '0',
-            '--yaw', '0', '--pitch', '0', '--roll', '0',
-            '--frame-id', 'base_footprint',
-            '--child-frame-id', 'lidar_frame'
+            '--yaw', '0', '--pitch', '0', '--roll', '0'
+            # '--frame-id', 'base_footprint',
+            # '--child-frame-id', 'lidar_frame'
         ]
     )
 
@@ -71,7 +71,6 @@ def generate_launch_description():
         frame_prefix_arg,
         robot_controller_launch,
         odom_publisher_node,
-        lidar_tf_publisher,
     ])
 
 

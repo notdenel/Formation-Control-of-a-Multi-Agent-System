@@ -331,21 +331,21 @@ class GlobalRefNav(Node):
         self._imu_vel        = _ImuVelocityEstimator()
         self._tf_broadcaster = tf2_ros.TransformBroadcaster(self)
         cb = ReentrantCallbackGroup()
-        self.declare_parameter('cmd_vel_topic', '/controller/cmd_vel')
+        self.declare_parameter('cmd_vel_topic', 'controller/cmd_vel')
         cmd_topic = self.get_parameter('cmd_vel_topic').get_parameter_value().string_value
         self._cmd_pub = self.create_publisher(Twist, cmd_topic, CMD_VEL_QOS)
-        self._imu_vel_pub  = self.create_publisher(TwistStamped, '/imu_velocity', CMD_VEL_QOS)
-        self._position_pub = self.create_publisher(PoseStamped,  '/position',     CMD_VEL_QOS)
-        self._objects_pub  = self.create_publisher(String,       '/objects',      BEST_EFFORT_QOS)
-        self.create_subscription(PoseWithCovarianceStamped, '/amcl_pose',
+        self._imu_vel_pub  = self.create_publisher(TwistStamped, 'imu_velocity', CMD_VEL_QOS)
+        self._position_pub = self.create_publisher(PoseStamped,  'position',     CMD_VEL_QOS)
+        self._objects_pub  = self.create_publisher(String,       'objects',      BEST_EFFORT_QOS)
+        self.create_subscription(PoseWithCovarianceStamped, 'amcl_pose',
                                 self._amcl_cb, AMCL_QOS, callback_group=cb)
         self.create_subscription(PoseArray, '/particle_cloud',
                                 self._particle_cloud_cb, SENSOR_QOS, callback_group=cb)
-        self.create_subscription(Odometry, '/odom_rf2o',
+        self.create_subscription(Odometry, 'odom_rf2o',
                                 self._rf2o_cb, SENSOR_QOS, callback_group=cb)
-        self.create_subscription(Imu, '/imu_corrected',
+        self.create_subscription(Imu, 'imu_corrected',
                                 self._imu_cb, SENSOR_QOS, callback_group=cb)
-        self.create_subscription(LaserScan, '/scan_raw',
+        self.create_subscription(LaserScan, 'scan_raw',
                                 self._scan_cb, SENSOR_QOS, callback_group=cb)
         self.create_subscription(Float32, '/speed_limit',
                                 self._speed_limit_cb, BEST_EFFORT_QOS, callback_group=cb)
