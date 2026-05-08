@@ -31,12 +31,12 @@ ROBOT_B = '/robot3'
 # ══════════════════════════════════════════════════════════════════════════════
 
 
-LINEAR_SPEED   = 5.0   # m/s  – max speed along dominant axis
+LINEAR_SPEED   = 0.3   # m/s  – capped output speed sent to controller/cmd_vel
 GOAL_TOLERANCE = 0.05  # m    – stop when inter-robot distance is this small
 
 # APF gains
 G_A = 10.0   # attraction gain  (toward peer)
-G_R = 0.5   # repulsion gain   (away from peer at close range)
+G_R = 0.5    # repulsion gain   (away from peer at close range)
 
 # Yaw-drift correction
 YAW_CORRECTION_GAIN       = 1.0   # rad/s per rad
@@ -109,7 +109,10 @@ class RobotDriver(Node):
         self.done           = False
 
         # ── ROS I/O ───────────────────────────────────────────────────────────
-        self.cmd_pub   = self.create_publisher(Twist, f'{namespace}/cmd_vel', 10)
+        # FIX 1: Publish to /robotX/controller/cmd_vel — this is the topic the
+        # hardware driver (odom_publisher_node.py) actually subscribes to.
+        # The old topic /robotX/cmd_vel has no subscriber on real hardware.
+        self.cmd_pub   = self.create_publisher(Twist, f'{namespace}/controller/cmd_vel', 10)
         self.ready_pub = self.create_publisher(Bool,  f'{namespace}/ready',   10)
 
         self.create_subscription(
@@ -123,6 +126,14 @@ class RobotDriver(Node):
                     10)
 
         self.create_timer(0.05, self._control_loop)
+
+        # FIX 2: Re-broadcast ready at 5 Hz until all peers have seen it.
+        # The /robotX/ready topic has no TRANSIENT_LOCAL durability, so a
+        # single publish inside _odom_cb is silently lost if a peer's
+        # subscriber is not yet active — all_ready would never become True
+        # and the control loop would spin forever doing nothing.
+        self.create_timer(0.2, self._broadcast_ready)
+
         self.get_logger().info(f'[{namespace}] Driver initialised.')
 
     # ── public API ────────────────────────────────────────────────────────────
@@ -150,8 +161,9 @@ class RobotDriver(Node):
         if self.start_yaw is None:
             self.start_yaw = self.current_yaw
 
-        # Stop advertising readiness once everyone is synchronised
-        if not self.all_ready:
+    def _broadcast_ready(self) -> None:
+        """FIX 2: Keep advertising readiness until all peers have confirmed."""
+        if self.odom_ready and not self.all_ready:
             self.ready_pub.publish(Bool(data=True))
 
     def _ready_cb(self, peer_ns: str) -> None:
@@ -196,7 +208,7 @@ class RobotDriver(Node):
             return
 
         # ── APF forces (world frame) ──────────────────────────────────────────
-        
+
         direction = delta.normalized()          # unit vector: peer → self
 
         # Attraction: pulls self toward peer (negative gradient of ½·G_A·d²)
@@ -207,12 +219,27 @@ class RobotDriver(Node):
 
         f_total = f_attract + f_repulse
 
+        # FIX 3: Normalise the APF force to a unit direction then scale to
+        # LINEAR_SPEED.  Without this the raw force magnitude (up to ~50 m/s
+        # at 5 m separation with G_A=10) was sent directly as a velocity
+        # command — saturating the motor driver and making motion uncontrollable.
+        # LINEAR_SPEED was declared but never used; this is its intended role.
+        f_norm = f_total.norm()
+        if f_norm < 1e-6:
+            return
+        world_vel = f_total / f_norm * LINEAR_SPEED
+
         # ── World → body-frame transform ─────────────────────────────────────
         c = math.cos(self.current_yaw)
         s = math.sin(self.current_yaw)
 
-        local_x =  c * f_total.x + s * f_total.y
-        local_y = -s * f_total.x + c * f_total.y
+        local_x =  c * world_vel.x + s * world_vel.y
+        local_y = -s * world_vel.x + c * world_vel.y
+
+        # ── Per-axis clamp to keep mecanum wheel loads balanced ───────────────
+        max_axis = LINEAR_SPEED / math.sqrt(2)
+        local_x  = max(-max_axis, min(max_axis, local_x))
+        local_y  = max(-max_axis, min(max_axis, local_y))
 
         # ── Yaw-drift correction ──────────────────────────────────────────────
         yaw_error = wrap_angle(self.current_yaw - self.start_yaw)

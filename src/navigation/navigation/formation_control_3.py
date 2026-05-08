@@ -2,10 +2,11 @@
 """
 Multi-robot formation control using APF + joystick-controlled centroid.
 Robots discover each other automatically from active /robotX/odom topics.
-Centroid starts at (0,0) and is moved by integrating /controller/cmd_vel.
+Centroid starts at (0,0) and is moved by integrating /robotX/controller/cmd_vel
+(where X is the primary/first-discovered robot's namespace).
 
 Usage:
-    ros2 run navigation aggregation
+    ros2 run navigation formation_control_3
 """
 
 import threading
@@ -24,16 +25,18 @@ from std_msgs.msg import Bool
 G_A            = 10.0
 G_R            = 0.5
 G_TRACK        = 1.0
-GOAL_TOLERANCE = 0.05   # m
-LINEAR_SPEED   = 1.0    # m/s
+GOAL_TOLERANCE = 0.05   # m  — per-pair formation error threshold
+LINEAR_SPEED   = 0.3    # m/s — capped output speed sent to controller/cmd_vel
 
 # ── Desired inter-agent distances (metres) ────────────────────────────────────
-# Row/col order matches sorted discovery order e.g. [/robot1, /robot3, /robot5]
-#             robot1  robot3  robot5
+# Row/col order matches sorted discovery order e.g. [/robot1, /robot2, /robot3].
+# The matrix must be symmetric: DIST_MATRIX[i][j] == DIST_MATRIX[j][i].
+# Zero on the diagonal (self-to-self).
+#             robot1  robot2  robot3
 DIST_MATRIX = [
-    [0.0,    1.0,    1.5],
-    [1.0,    0.0,    1.0],
-    [1.5,    1.0,    0.0],
+    [0.0,    0.5,    0.5],   # robot1 ↔ robot2: 0.5 m, robot1 ↔ robot3: 0.5 m
+    [0.5,    0.0,    0.5],   # robot2 ↔ robot1: 0.5 m, robot2 ↔ robot3: 0.5 m
+    [0.5,    0.5,    0.0],   # robot3 ↔ robot1: 0.5 m, robot3 ↔ robot2: 0.5 m
 ]
 
 # Yaw-drift correction
@@ -56,11 +59,11 @@ class Vec2:
     def __init__(self, x: float = 0.0, y: float = 0.0):
         self.x = x; self.y = y
 
-    def __add__(self, o):  return Vec2(self.x + o.x, self.y + o.y)
-    def __sub__(self, o):  return Vec2(self.x - o.x, self.y - o.y)
-    def __mul__(self, s):  return Vec2(self.x * s,   self.y * s)
-    def __rmul__(self, s): return self.__mul__(s)
-    def __truediv__(self, s): return Vec2(self.x / s, self.y / s)
+    def __add__(self, o):     return Vec2(self.x + o.x, self.y + o.y)
+    def __sub__(self, o):     return Vec2(self.x - o.x, self.y - o.y)
+    def __mul__(self, s):     return Vec2(self.x * s,   self.y * s)
+    def __rmul__(self, s):    return self.__mul__(s)
+    def __truediv__(self, s): return Vec2(self.x / s,   self.y / s)
 
     def norm(self):
         return math.hypot(self.x, self.y)
@@ -76,8 +79,14 @@ def yaw_from_quaternion(q) -> float:
         1.0 - 2.0 * (q.y * q.y + q.z * q.z))
 
 
+def natural_sort_key(s: str):
+    """Sort namespaces numerically so /robot2 < /robot10."""
+    return [int(c) if c.isdigit() else c.lower()
+            for c in re.split(r'(\d+)', s)]
+
+
 # ── DiscoveryNode ─────────────────────────────────────────────────────────────
-#discovers nodes 
+
 class DiscoveryNode(Node):
     ODOM_PATTERN = re.compile(r'^(/robot\w+)/odom$')
 
@@ -96,8 +105,10 @@ class DiscoveryNode(Node):
             if len(found) >= 2:
                 break
             rclpy.spin_once(self, timeout_sec=0.2)
-        self.get_logger().info(f'[discovery] Found: {sorted(found)}')
-        return sorted(found)
+        # Use natural sort so /robot2 comes before /robot10
+        found = sorted(found, key=natural_sort_key)
+        self.get_logger().info(f'[discovery] Found: {found}')
+        return found
 
 
 # ── RobotDriver ───────────────────────────────────────────────────────────────
@@ -106,9 +117,9 @@ class RobotDriver(Node):
     """
     Controls one robot.
 
-    Centroid starts at (0,0) and is integrated from /controller/cmd_vel
-    by whichever driver instance receives it — all drivers share the same
-    centroid object via a reference passed in at construction.
+    Centroid starts at (0,0) and is integrated from the primary robot's
+    /robotX/controller/cmd_vel topic (only by the primary driver, index 0
+    in the sorted namespace list) to avoid N-times over-integration.
     """
 
     def __init__(
@@ -117,11 +128,13 @@ class RobotDriver(Node):
         all_namespaces: list[str],
         centroid:       Vec2,
         centroid_lock:  threading.Lock,
+        is_primary:     bool = False,
+        primary_ns:     str  = '',
     ):
         super().__init__(f'{namespace.strip("/")}_driver')
 
         self.namespace     = namespace
-        self.centroid      = centroid       # shared mutable Vec2
+        self.centroid      = centroid
         self.centroid_lock = centroid_lock
 
         self.peers:         list['RobotDriver'] = []
@@ -138,16 +151,24 @@ class RobotDriver(Node):
         self.all_ready      = False
         self.done           = False
 
-        self.cmd_pub   = self.create_publisher(Twist, f'{namespace}/cmd_vel', 10)
+        # FIX 1: Publish to /robotX/controller/cmd_vel — this is the topic the
+        # hardware driver (odom_publisher_node.py) actually subscribes to.
+        # The old topic /robotX/cmd_vel has no subscriber on real hardware.
+        self.cmd_pub   = self.create_publisher(Twist, f'{namespace}/controller/cmd_vel', 10)
         self.ready_pub = self.create_publisher(Bool,  f'{namespace}/ready',   10)
 
         self.create_subscription(Odometry, f'{namespace}/odom', self._odom_cb, 10)
 
-        # Only one driver needs to subscribe to the joystick — but subscribing
-        # from all is harmless and avoids picking a "primary" driver arbitrarily.
-        # The centroid update is idempotent under the lock so duplicate callbacks
-        # simply overwrite with the same value.
-        self.create_subscription(Twist, '/controller/cmd_vel', self._joy_cb, 10)
+        # FIX 2: Joystick topic uses the primary robot's namespaced topic.
+        # The joystick node runs under namespace=robotX (e.g. robot1) and
+        # therefore publishes to /robot1/controller/cmd_vel — an absolute path.
+        # The old code subscribed to '/controller/cmd_vel' (no namespace prefix),
+        # which is a topic no node ever publishes to, so centroid never moved.
+        if is_primary:
+            joy_topic = f'{primary_ns}/controller/cmd_vel'
+            self.create_subscription(Twist, joy_topic, self._joy_cb, 10)
+            self.get_logger().info(
+                f'[{namespace}] Primary driver — joystick on {joy_topic}')
 
         for ns in all_namespaces:
             if ns != namespace:
@@ -156,7 +177,16 @@ class RobotDriver(Node):
                     lambda msg, ns=ns: self._ready_cb(ns), 10)
 
         self.create_timer(DT, self._control_loop)
-        self.get_logger().info(f'[{namespace}] Driver initialised.')
+
+        # FIX 3: Periodically re-publish ready so late-joining peers don't miss
+        # the single message.  /robotX/ready has no TRANSIENT_LOCAL durability,
+        # so a single publish fired inside _odom_cb is lost if a peer's
+        # subscriber isn't yet active — all_ready would never become True.
+        self.create_timer(0.2, self._broadcast_ready)
+
+        self.get_logger().info(
+            f'[{namespace}] Driver initialised '
+            f'({"primary" if is_primary else "secondary"}).')
 
     def add_peer(self, peer: 'RobotDriver', desired_dist: float) -> None:
         self.peers.append(peer)
@@ -176,14 +206,14 @@ class RobotDriver(Node):
         self.odom_ready  = True
         if self.start_yaw is None:
             self.start_yaw = self.current_yaw
-        if not self.all_ready:
+
+    def _broadcast_ready(self) -> None:
+        """FIX 3: Keep advertising readiness until all peers have confirmed."""
+        if self.odom_ready and not self.all_ready:
             self.ready_pub.publish(Bool(data=True))
 
     def _joy_cb(self, msg: Twist) -> None:
-        # Integrate joystick velocity into centroid position.
-        # linear.x → centroid world-X,  linear.y → centroid world-Y.
-        # All driver instances share the same centroid object; the lock
-        # prevents torn writes when multiple callbacks fire concurrently.
+        """FIX 2: Only called on the primary driver — no N-times duplication."""
         with self.centroid_lock:
             self.centroid.x += msg.linear.x * DT
             self.centroid.y += msg.linear.y * DT
@@ -194,7 +224,8 @@ class RobotDriver(Node):
         self.ready_peers.add(peer_ns)
         if self.all_namespaces.issubset(self.ready_peers):
             self.all_ready = True
-            self.get_logger().info(f'[{self.namespace}] All peers ready — starting!')
+            self.get_logger().info(
+                f'[{self.namespace}] All peers ready — starting!')
 
     # ── control loop ──────────────────────────────────────────────────────────
 
@@ -203,7 +234,7 @@ class RobotDriver(Node):
             return
         if not all(p.odom_ready for p in self.peers):
             return
-        if self.start_yaw is None:
+        if self.start_yaw is None or self.current_yaw is None:
             return
 
         pos_self = self.get_position()
@@ -228,7 +259,21 @@ class RobotDriver(Node):
             G_TRACK * (cy - pos_self.y),
         )
 
-        # ── Pairwise APF: Σ_{j≠i} [ J_a - J_r ] * unit(xi - xj) ─────────────
+        # ── Pairwise APF ──────────────────────────────────────────────────────
+        # FIX 4: Replace the 1/error² repulsion (which blows up as dist → d_star
+        # from below, producing forces of 5 000 – 500 000 m/s² at 1–10 mm short)
+        # with a linear-symmetric APF:
+        #
+        #   error = dist - d_star       (+ too far, − too close)
+        #   f_on_i = G_A * error * (−unit_away)   purely linear, no singularity
+        #
+        # "unit_away" is the unit vector pointing FROM peer j TO self i.
+        # Negating it means:
+        #   error > 0 (too far)  → force is in the −unit_away direction → toward j ✓
+        #   error < 0 (too close) → force is in the +unit_away direction → away from j ✓
+        #
+        # G_R is no longer needed for the pairwise term (removed); the linear
+        # law is inherently repulsive below d_star without a separate 1/r² term.
         errors = []
         for pos_peer, d_star in zip(peer_positions, self.desired_dists):
             dx   = pos_self.x - pos_peer.x
@@ -239,21 +284,20 @@ class RobotDriver(Node):
                 errors.append(0.0)
                 continue
 
-            error = dist - d_star          # + too far, - too close
+            error = dist - d_star   # + too far, − too close
             errors.append(abs(error))
 
             if abs(error) < 1e-9:
                 continue
 
+            # Unit vector pointing FROM peer TO self (away from peer)
             ux = dx / dist
             uy = dy / dist
 
-            # Attraction toward desired distance; repulsion only when too close
-            fa = -G_A * error
-            fr =  G_R / (error ** 2) if error < 0 else 0.0
-
-            f.x += ux * (fa + fr)
-            f.y += uy * (fa + fr)
+            # Linear APF: negative sign pulls self toward peer when too far,
+            # positive sign pushes self away when too close.
+            f.x += -G_A * error * ux
+            f.y += -G_A * error * uy
 
         # ── Goal check ────────────────────────────────────────────────────────
         if all(e < GOAL_TOLERANCE for e in errors):
@@ -278,7 +322,7 @@ class RobotDriver(Node):
         lx =  c * wx + s * wy
         ly = -s * wx + c * wy
 
-        # ── Per-axis clamp — equalises mecanum FR/BL wheel load ───────────────
+        # ── Per-axis clamp to keep mecanum wheel loads balanced ───────────────
         mx = LINEAR_SPEED / math.sqrt(2)
         lx = max(-mx, min(mx, lx))
         ly = max(-mx, min(mx, ly))
@@ -288,7 +332,8 @@ class RobotDriver(Node):
         wz = 0.0
         if abs(yaw_err) > YAW_CORRECTION_THRESH_RAD:
             wz = max(-YAW_CORRECTION_MAX_RAD_S,
-                     min(YAW_CORRECTION_MAX_RAD_S, -YAW_CORRECTION_GAIN * yaw_err))
+                     min(YAW_CORRECTION_MAX_RAD_S,
+                         -YAW_CORRECTION_GAIN * yaw_err))
 
         twist = Twist()
         twist.linear.x  = lx
@@ -306,7 +351,7 @@ class RobotDriver(Node):
 
 def all_pairwise_errors(
         namespaces:  list[str],
-        driver_map:  dict[str, RobotDriver],
+        driver_map:  dict[str, 'RobotDriver'],
         dist_matrix: list[list[float]],
 ) -> 'list[tuple] | None':
     out = []
@@ -318,7 +363,8 @@ def all_pairwise_errors(
             pb = driver_map[b].get_position()
             if pa is None or pb is None:
                 return None
-            out.append((a, b, math.hypot(pa.x - pb.x, pa.y - pb.y), dist_matrix[i][j]))
+            out.append((a, b, math.hypot(pa.x - pb.x, pa.y - pb.y),
+                        dist_matrix[i][j]))
     return out
 
 
@@ -332,16 +378,20 @@ def main() -> None:
     discovery.destroy_node()
 
     if len(namespaces) < 2:
-        print(f'[aggregation] Need ≥2 robots, found {len(namespaces)}. Aborting.')
+        print(f'[formation_control_3] Need ≥2 robots, found {len(namespaces)}. Aborting.')
         rclpy.shutdown()
         return
 
     n = len(namespaces)
 
     if len(DIST_MATRIX) < n or any(len(r) < n for r in DIST_MATRIX):
-        print(f'[aggregation] DIST_MATRIX too small for {n} robots. Aborting.')
+        print(f'[formation_control_3] DIST_MATRIX too small for {n} robots. Aborting.')
         rclpy.shutdown()
         return
+
+    # Primary namespace is the first in sorted order (e.g. /robot1).
+    # The joystick is expected to run in that robot's namespace.
+    primary_ns = namespaces[0]
 
     print(f'\nFormation control: {" ↔ ".join(namespaces)}')
     print('Desired distances:')
@@ -350,20 +400,28 @@ def main() -> None:
             if j <= i:
                 continue
             print(f'  {a} ↔ {b}: {DIST_MATRIX[i][j]:.3f} m')
-    print(f'Centroid: (0.00, 0.00) — move with joystick on /controller/cmd_vel\n')
+    print(f'Centroid: (0.00, 0.00) — move with joystick on '
+          f'{primary_ns}/controller/cmd_vel\n')
 
     # Shared centroid — all drivers hold a reference to the same object
     centroid      = Vec2(0.0, 0.0)
     centroid_lock = threading.Lock()
 
     driver_map: dict[str, RobotDriver] = {}
-    for ns in namespaces:
-        driver_map[ns] = RobotDriver(ns, namespaces, centroid, centroid_lock)
+    for idx, ns in enumerate(namespaces):
+        driver_map[ns] = RobotDriver(
+            ns, namespaces, centroid, centroid_lock,
+            is_primary=(idx == 0),
+            primary_ns=primary_ns,
+        )
 
+    # Wire peers: use DIST_MATRIX[i][j] indexed by sorted namespace order,
+    # consistent across all robots.
     for i, ns in enumerate(namespaces):
         for j, other_ns in enumerate(namespaces):
             if other_ns != ns:
-                driver_map[ns].add_peer(driver_map[other_ns], DIST_MATRIX[i][j])
+                driver_map[ns].add_peer(
+                    driver_map[other_ns], DIST_MATRIX[i][j])
 
     drivers  = [driver_map[ns] for ns in namespaces]
     executor = MultiThreadedExecutor(num_threads=n * 2)
@@ -387,7 +445,7 @@ def main() -> None:
                         f'{driver_map[ns].get_position().y:.2f})'
                         for ns in namespaces)
                     err_str = '  '.join(
-                        f'|{a.strip("/")}↔{b.strip("/")}|={d:.2f}/{ds:.2f}m'
+                        f'|{a.strip("/"):}↔{b.strip("/")}|={d:.2f}/{ds:.2f}m'
                         for a, b, d, ds in pairs)
                     print(f'[status] centroid=({cx:.2f},{cy:.2f})  '
                           f'{pos_str}  {err_str}')
@@ -401,8 +459,9 @@ def main() -> None:
                     print(f'  {ns}: ({p.x:.3f}, {p.y:.3f})')
                 if pairs:
                     for a, b, d, ds in pairs:
-                        print(f'  |{a.strip("/")}↔{b.strip("/")}|='
-                              f'{d:.3f} m  (desired {ds:.3f} m  err {abs(d-ds):.3f} m)')
+                        print(f'  |{a.strip("/"):}↔{b.strip("/")}|='
+                              f'{d:.3f} m  (desired {ds:.3f} m  '
+                              f'err {abs(d - ds):.3f} m)')
                 break
 
     except KeyboardInterrupt:

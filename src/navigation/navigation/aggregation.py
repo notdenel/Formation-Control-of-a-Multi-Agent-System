@@ -151,11 +151,15 @@ class RobotDriver(Node):
         self.done           = False
 
         # ── ROS I/O ───────────────────────────────────────────────────────────
-        self.cmd_pub   = self.create_publisher(Twist, f'{namespace}/cmd_vel', 10)
+        self.cmd_pub   = self.create_publisher(Twist, f'{namespace}/controller/cmd_vel', 10)
         self.ready_pub = self.create_publisher(Bool,  f'{namespace}/ready',   10)
 
-        self.create_subscription(
-            Odometry, f'{namespace}/odom', self._odom_cb, 10)
+        # NOTE: The odom subscription is intentionally deferred.
+        # main() patches _odom_cb to also update the shared PeerState, then
+        # registers the single subscription with the patched callback.
+        # Do NOT add a subscription here — it would create a second subscriber
+        # with the original (un-patched) callback, leaving PeerState unpopulated
+        # for the other drivers while also running the control loop on stale data.
 
         for ns in all_namespaces:
             if ns != namespace:
@@ -165,6 +169,10 @@ class RobotDriver(Node):
                     10)
 
         self.create_timer(0.05, self._control_loop)
+        # Re-broadcast our ready signal at 5 Hz until all peers have seen it.
+        # Without this, a peer that subscribes after our first odom callback
+        # would never receive the Bool(True) and all_ready would never trigger.
+        self.create_timer(0.2, self._broadcast_ready)
         self.get_logger().info(f'[{namespace}] Driver initialised.')
 
     # ── public API ────────────────────────────────────────────────────────────
@@ -178,6 +186,11 @@ class RobotDriver(Node):
 
     # ── ROS callbacks ─────────────────────────────────────────────────────────
 
+    def _broadcast_ready(self) -> None:
+        """Repeatedly advertise our ready state until all peers have seen it."""
+        if self.odom_ready and not self.all_ready:
+            self.ready_pub.publish(Bool(data=True))
+
     def _odom_cb(self, msg: Odometry) -> None:
         pose = msg.pose.pose
 
@@ -189,9 +202,6 @@ class RobotDriver(Node):
 
         if self.start_yaw is None:
             self.start_yaw = self.current_yaw
-
-        if not self.all_ready:
-            self.ready_pub.publish(Bool(data=True))
 
     def _ready_cb(self, peer_ns: str) -> None:
         if self.all_ready:
