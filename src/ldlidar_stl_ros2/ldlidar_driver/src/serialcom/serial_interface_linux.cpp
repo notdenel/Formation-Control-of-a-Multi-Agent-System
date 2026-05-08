@@ -19,6 +19,8 @@
 
 #include "serial_interface_linux.h"
 #include "log_module.h"
+#include <pthread.h>
+#include <sched.h>
 
 
 #define MAX_ACK_BUF_LEN 4096
@@ -93,6 +95,16 @@ bool SerialInterfaceLinux::Open(std::string &port_name, uint32_t com_baudrate) {
 
   rx_thread_exit_flag_ = false;
   rx_thread_ = new std::thread(RxThreadProc, this);
+
+  // Elevate the RX thread to soft-real-time priority so the kernel tty buffer
+  // (≈ 4 KB at 230400 baud ≈ 140 ms) never overflows on a loaded Raspberry Pi.
+  // Requires CAP_SYS_NICE; silently ignored if the process lacks that capability.
+  {
+    struct sched_param sp{};
+    sp.sched_priority = 20;
+    pthread_setschedparam(rx_thread_->native_handle(), SCHED_RR, &sp);
+  }
+
   is_cmd_opened_ = true;
 
   return true;
@@ -123,7 +135,7 @@ bool SerialInterfaceLinux::Close() {
 
 bool SerialInterfaceLinux::ReadFromIO(uint8_t *rx_buf, uint32_t rx_buf_len,
                                    uint32_t *rx_len) {
-  static timespec timeout = {0, (long)(100 * 1e6)};
+  static timespec timeout = {0, (long)(10 * 1e6)};  // 10 ms — keeps tty buffer drained on busy Pi
   int32_t len = -1;
 
   if (IsOpened()) {

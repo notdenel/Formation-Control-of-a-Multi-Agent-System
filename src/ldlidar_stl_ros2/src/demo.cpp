@@ -64,6 +64,10 @@ int main(int argc, char **argv) {
   node->get_parameter("angle_crop_min", setting.angle_crop_min);
   node->get_parameter("angle_crop_max", setting.angle_crop_max);
 
+  double publish_rate;
+  node->declare_parameter<double>("publish_rate", 30.0);
+  node->get_parameter("publish_rate", publish_rate);
+
   ldlidar::LDLidarDriver* ldlidarnode = new ldlidar::LDLidarDriver();
 
   RCLCPP_INFO(node->get_logger(), "LDLiDAR SDK Pack Version is: %s", ldlidarnode->GetLidarSdkVersionNumber().c_str());
@@ -96,21 +100,26 @@ int main(int argc, char **argv) {
     RCLCPP_INFO(node->get_logger(), "ldlidar node start is success");
   } else {
     RCLCPP_ERROR(node->get_logger(), "ldlidar node start is fail");
-    exit(EXIT_FAILURE);
+    delete ldlidarnode;
+    rclcpp::shutdown();
+    return 1;
   }
 
   if (ldlidarnode->WaitLidarCommConnect(3000)) {
     RCLCPP_INFO(node->get_logger(), "ldlidar communication is normal.");
   } else {
     RCLCPP_ERROR(node->get_logger(), "ldlidar communication is abnormal.");
-    exit(EXIT_FAILURE);
+    ldlidarnode->Stop();   // closes serial port and joins rx_thread
+    delete ldlidarnode;
+    rclcpp::shutdown();
+    return 1;
   }
 
   // create ldlidar data topic and publisher
   rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr publisher = 
       node->create_publisher<sensor_msgs::msg::LaserScan>(topic_name, 10);
   
-  rclcpp::WallRate r(10); //10hz
+  rclcpp::WallRate r(publish_rate);
 
   ldlidar::Points2D laser_scan_points;
   double lidar_scan_freq;
@@ -153,13 +162,18 @@ void  ToLaserscanMessagePublish(ldlidar::Points2D& src,  double lidar_spin_freq,
   static bool first_scan = true;
 
   start_scan_time = node->now();
-  scan_time = (start_scan_time.seconds() - end_scan_time.seconds());
 
   if (first_scan) {
     first_scan = false;
     end_scan_time = start_scan_time;
     return;
   }
+
+  // Use the hardware-reported spin frequency for an accurate scan period.
+  // Wall-clock elapsed time inflates under CPU load and causes rf2o to under-estimate velocity.
+  scan_time = (lidar_spin_freq > 0) ? (1.0 / lidar_spin_freq)
+                                     : (start_scan_time.seconds() - end_scan_time.seconds());
+
   // Adjust the parameters according to the demand
   angle_min = 0;
   angle_max = (2 * M_PI);

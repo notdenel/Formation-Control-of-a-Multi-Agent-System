@@ -181,7 +181,7 @@ def launch_setup(context, *args, **kwargs):
             'base_frame_id': base_frame,
             'odom_frame_id': odom_frame,
             'publish_tf': 'false',
-            'freq': '10.0',
+            'freq': '8.0',
         }.items(),
     )
 

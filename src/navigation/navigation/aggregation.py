@@ -1,167 +1,408 @@
 #!/usr/bin/env python3
 """
-Drive robot1 and robot3 to a user-specified (x, y) coordinate simultaneously,
-using odometry feedback (/robotX/odom) to know when the target distance is reached.
-Robots use mecanum wheels and strafe directly without changing heading.
+Automatic multi-robot aggregation using APF + odometry feedback.
+Robots are discovered automatically from active /robotX/odom topics.
+No parameters needed — peers are discovered from the ROS graph.
 
 Usage:
-    ros2 run navigation aggregation <x> <y>
+    ros2 run navigation aggregation
 """
+
+import threading
+import math
+import re
 
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
-import math
-import sys
+from std_msgs.msg import Bool
 
 
-# ── Tunable parameters ────────────────────────────────────────────────────────
-LINEAR_SPEED   = 0.2   # m/s – max speed along dominant axis
-GOAL_TOLERANCE = 0.05  # m   – stop when this close to the goal
-# ─────────────────────────────────────────────────────────────────────────────
+# ── APF gains ─────────────────────────────────────────────────────────────────
+G_A = 10.0  # attraction gain  (toward peer)
+G_R = 0.5   # repulsion gain   (away from peer at close range)
+
+GOAL_TOLERANCE = (G_R / G_A) ** (1 / 3)   # natural equilibrium ≈ 0.368 m
+
+# Yaw-drift correction
+YAW_CORRECTION_GAIN       = 1.0
+YAW_CORRECTION_MAX_RAD_S  = 0.5
+YAW_CORRECTION_THRESH_RAD = 0.05
 
 
-def yaw_from_quaternion(q):
-    """Extract yaw (heading) from a geometry_msgs/Quaternion."""
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def wrap_angle(angle: float) -> float:
+    return math.atan2(math.sin(angle), math.cos(angle))
+
+
+class Vec2:
+    def __init__(self, x: float = 0.0, y: float = 0.0):
+        self.x = x
+        self.y = y
+
+    def __neg__(self)           -> 'Vec2': return Vec2(-self.x, -self.y)
+    def __add__(self, o)        -> 'Vec2': return Vec2(self.x + o.x, self.y + o.y)
+    def __sub__(self, o)        -> 'Vec2': return Vec2(self.x - o.x, self.y - o.y)
+    def __mul__(self, s: float) -> 'Vec2': return Vec2(self.x * s,   self.y * s)
+    def __rmul__(self, s)       -> 'Vec2': return self.__mul__(s)
+    def __truediv__(self, s)    -> 'Vec2': return Vec2(self.x / s,   self.y / s)
+    def __repr__(self)          -> str:    return f'Vec2({self.x:.3f}, {self.y:.3f})'
+
+    def norm(self) -> float:
+        return math.hypot(self.x, self.y)
+
+    def normalized(self) -> 'Vec2':
+        n = self.norm()
+        return self / n if n > 1e-9 else Vec2()
+
+
+def yaw_from_quaternion(q) -> float:
     siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
     cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
     return math.atan2(siny_cosp, cosy_cosp)
 
 
-class RobotDriver(Node):
+# ── Peer state (shared position store) ───────────────────────────────────────
+
+class PeerState:
     """
-    Controls a single robot namespace.
-    Subscribes to /robotX/odom and publishes to /robotX/cmd_vel.
-    Strafes the robot to (goal_x, goal_y) without changing heading.
+    Lightweight position store for a peer discovered from the ROS graph.
+    One instance per peer namespace, shared across all RobotDrivers.
     """
+    def __init__(self, namespace: str):
+        self.namespace = namespace
+        self._lock     = threading.Lock()
+        self._pos: Vec2 | None = None
+        self.ready     = False
 
-    def __init__(self, namespace: str, goal_x: float, goal_y: float):
-        super().__init__(f'{namespace.strip("/")}_driver')
+    def update(self, x: float, y: float) -> None:
+        with self._lock:
+            self._pos  = Vec2(x, y)
+            self.ready = True
 
-        self.namespace   = namespace
-        self.goal_x      = goal_x
-        self.goal_y      = goal_y
+    def get_position(self) -> 'Vec2 | None':
+        with self._lock:
+            return self._pos
 
-        # Odometry state
-        self.current_x   = None
-        self.current_y   = None
-        self.current_yaw = None
-        self.odom_ready  = False
 
-        # Done flag
-        self.done = False
+# ── Discovery node ────────────────────────────────────────────────────────────
 
-        # Publisher & subscriber
-        self.cmd_pub = self.create_publisher(Twist, f'{namespace}/cmd_vel', 10)
-        self.odom_sub = self.create_subscription(
-            Odometry, f'{namespace}/odom', self._odom_callback, 10)
+class DiscoveryNode(Node):
+    """
+    Scans the ROS graph once for active /robotX/odom topics.
+    Returns the list of discovered namespaces.
+    """
+    ODOM_PATTERN = re.compile(r'^(/robot\w+)/odom$')
 
-        # Control loop at 20 Hz
-        self.timer = self.create_timer(0.05, self._control_loop)
+    def __init__(self):
+        super().__init__('aggregation_discovery')
+
+    def discover(self, timeout_sec: float = 3.0) -> list[str]:
+        """Block until at least 2 robots are found or timeout expires."""
+        deadline = self.get_clock().now().nanoseconds * 1e-9 + timeout_sec
+        namespaces: list[str] = []
+
+        while self.get_clock().now().nanoseconds * 1e-9 < deadline:
+            topics = self.get_topic_names_and_types()
+            namespaces = [
+                m.group(1)
+                for topic, _ in topics
+                if (m := self.ODOM_PATTERN.match(topic))
+            ]
+            if len(namespaces) >= 2:
+                break
+            rclpy.spin_once(self, timeout_sec=0.2)
 
         self.get_logger().info(
-            f'[{namespace}] Driver started. Goal: ({goal_x:.3f}, {goal_y:.3f})')
+            f'[discovery] Found {len(namespaces)} robot(s): {namespaces}')
+        return sorted(namespaces)
 
-    # ── Callbacks ─────────────────────────────────────────────────────────────
 
-    def _odom_callback(self, msg: Odometry):
+# ── RobotDriver ───────────────────────────────────────────────────────────────
+
+class RobotDriver(Node):
+    """
+    Controls one robot namespace.
+    Peers are injected as PeerState objects after discovery.
+    Implements: J_i(x) = Σ_{j≠i} [ J_a(||xi-xj||) - J_r(||xi-xj||) ]
+    """
+
+    def __init__(self, namespace: str, all_namespaces: list[str]):
+        super().__init__(f'{namespace.strip("/")}_driver')
+
+        self.namespace = namespace
+        self.peers: list[PeerState] = []   # injected via add_peer()
+
+        # ── thread-safe own position ──────────────────────────────────────────
+        self._pos_lock = threading.Lock()
+        self._pos: Vec2 | None = None
+
+        self.current_yaw: float | None = None
+        self.start_yaw:   float | None = None
+        self.odom_ready   = False
+
+        # ── peer-ready handshake ──────────────────────────────────────────────
+        self.ready_peers    = set()
+        self.all_namespaces = set(all_namespaces) - {namespace}
+        self.all_ready      = False
+        self.done           = False
+
+        # ── ROS I/O ───────────────────────────────────────────────────────────
+        self.cmd_pub   = self.create_publisher(Twist, f'{namespace}/cmd_vel', 10)
+        self.ready_pub = self.create_publisher(Bool,  f'{namespace}/ready',   10)
+
+        self.create_subscription(
+            Odometry, f'{namespace}/odom', self._odom_cb, 10)
+
+        for ns in all_namespaces:
+            if ns != namespace:
+                self.create_subscription(
+                    Bool, f'{ns}/ready',
+                    lambda msg, ns=ns: self._ready_cb(ns),
+                    10)
+
+        self.create_timer(0.05, self._control_loop)
+        self.get_logger().info(f'[{namespace}] Driver initialised.')
+
+    # ── public API ────────────────────────────────────────────────────────────
+
+    def add_peer(self, peer: PeerState) -> None:
+        self.peers.append(peer)
+
+    def get_position(self) -> 'Vec2 | None':
+        with self._pos_lock:
+            return self._pos
+
+    # ── ROS callbacks ─────────────────────────────────────────────────────────
+
+    def _odom_cb(self, msg: Odometry) -> None:
         pose = msg.pose.pose
-        self.current_x   = pose.position.x
-        self.current_y   = pose.position.y
+
+        with self._pos_lock:
+            self._pos = Vec2(pose.position.x, pose.position.y)
+
         self.current_yaw = yaw_from_quaternion(pose.orientation)
         self.odom_ready  = True
 
+        if self.start_yaw is None:
+            self.start_yaw = self.current_yaw
+
+        if not self.all_ready:
+            self.ready_pub.publish(Bool(data=True))
+
+    def _ready_cb(self, peer_ns: str) -> None:
+        if self.all_ready:
+            return
+        self.ready_peers.add(peer_ns)
+        if self.all_namespaces.issubset(self.ready_peers):
+            self.all_ready = True
+            self.get_logger().info(
+                f'[{self.namespace}] All peers ready — starting aggregation!')
+
     # ── Control loop ──────────────────────────────────────────────────────────
 
-    def _control_loop(self):
-        if self.done or not self.odom_ready:
+    def _control_loop(self) -> None:
+        if self.done or not self.odom_ready or not self.all_ready:
+            return
+        if not all(p.ready for p in self.peers):
+            return
+        if self.start_yaw is None:
             return
 
-        dx = self.goal_x - self.current_x
-        dy = self.goal_y - self.current_y
-        distance = math.hypot(dx, dy)
+        pos_self = self.get_position()
+        if pos_self is None:
+            return
 
-        twist = Twist()
+        # ── J_i(x) = Σ_{j≠i} [ J_a(||xi-xj||) - J_r(||xi-xj||) ] ──────────
+        f_total   = Vec2()
+        distances = []
 
-        if distance < GOAL_TOLERANCE:
-            # ── Goal reached ──
-            self.cmd_pub.publish(twist)   # zero velocity
+        for peer in self.peers:
+            pos_peer = peer.get_position()
+            if pos_peer is None:
+                return
+
+            delta    = pos_self - pos_peer
+            distance = delta.norm()
+            distances.append(distance)
+
+            if distance < 1e-6:
+                continue
+
+            direction = delta.normalized()
+
+            f_attract = -direction * G_A * distance
+            f_repulse =  direction * G_R / (distance ** 2)
+
+            f_total = f_total + f_attract + f_repulse
+
+        # ── Goal check ────────────────────────────────────────────────────────
+        if all(d < GOAL_TOLERANCE for d in distances):
+            self.cmd_pub.publish(Twist())
             self.done = True
             self.get_logger().info(
-                f'[{self.namespace}] Goal reached! '
-                f'Final pos: ({self.current_x:.3f}, {self.current_y:.3f})')
+                f'[{self.namespace}] Aggregation complete! '
+                f'dists={[f"{d:.3f}" for d in distances]}')
             return
 
-        # ── Holonomic strafe: world-frame error → robot-local-frame velocities ──
-        # Rotate (dx, dy) from the odom/world frame into the robot's body frame
-        # using the current yaw. angular.z stays 0 — heading never changes.
-        cos_yaw = math.cos(self.current_yaw)
-        sin_yaw = math.sin(self.current_yaw)
+        # ── Normalize → unit direction ────────────────────────────────────────
+        f_norm = f_total.norm()
+        if f_norm < 1e-6:
+            return
 
-        local_x =  cos_yaw * dx + sin_yaw * dy   # forward/back in robot frame
-        local_y = -sin_yaw * dx + cos_yaw * dy   # left/right strafe in robot frame
+        # APF naturally slows approach via growing repulsion — no ramp needed
+        LINEAR_SPEED = 1.0   # m/s — only sets the scale, not the profile
+        world_vel    = f_total / f_norm * LINEAR_SPEED
 
-        # Scale so the dominant axis reaches LINEAR_SPEED (preserves direction)
-        max_component = max(abs(local_x), abs(local_y))
-        scale = LINEAR_SPEED / max_component
+        # ── World → body-frame ────────────────────────────────────────────────
+        c = math.cos(self.current_yaw)
+        s = math.sin(self.current_yaw)
 
-        twist.linear.x = scale * local_x
-        twist.linear.y = scale * local_y
-        # twist.angular.z = 0.0  (default — heading never changes)
+        local_x =  c * world_vel.x + s * world_vel.y
+        local_y = -s * world_vel.x + c * world_vel.y
 
+        # ── Per-axis clamp — equalises mecanum wheel load ─────────────────────
+        max_axis = LINEAR_SPEED / math.sqrt(2)
+        local_x  = max(-max_axis, min(max_axis, local_x))
+        local_y  = max(-max_axis, min(max_axis, local_y))
+
+        # ── Yaw-drift correction ──────────────────────────────────────────────
+        yaw_error = wrap_angle(self.current_yaw - self.start_yaw)
+        wz = 0.0
+        if abs(yaw_error) > YAW_CORRECTION_THRESH_RAD:
+            wz = max(
+                -YAW_CORRECTION_MAX_RAD_S,
+                min(YAW_CORRECTION_MAX_RAD_S, -YAW_CORRECTION_GAIN * yaw_error),
+            )
+
+        twist = Twist()
+        twist.linear.x  = local_x
+        twist.linear.y  = local_y
+        twist.angular.z = wz
         self.cmd_pub.publish(twist)
+
         self.get_logger().info(
-            f'[{self.namespace}] dist={distance:.3f} m  '
-            f'vx={twist.linear.x:.3f}  vy={twist.linear.y:.3f}',
+            f'[{self.namespace}] dists={[f"{d:.3f}" for d in distances]}  '
+            f'vx={local_x:.3f}  vy={local_y:.3f}',
             throttle_duration_sec=0.5)
+
+
+# ── Utility ───────────────────────────────────────────────────────────────────
+
+def all_pairwise_distances(
+        drivers: list[RobotDriver],
+        peers:   dict[str, PeerState]
+) -> list[tuple[str, str, float]] | None:
+    results = []
+    ns_list = [d.namespace for d in drivers]
+    for i, ns_a in enumerate(ns_list):
+        for ns_b in ns_list[i + 1:]:
+            pa = peers[ns_a].get_position()
+            pb = peers[ns_b].get_position()
+            if pa is None or pb is None:
+                return None
+            results.append((ns_a, ns_b, (pa - pb).norm()))
+    return results
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def main():
-    # ── Parse goal coordinate from CLI args ──────────────────────────────────
-    if len(sys.argv) == 3:
-        try:
-            goal_x = float(sys.argv[1])
-            goal_y = float(sys.argv[2])
-        except ValueError:
-            print('Usage: ros2 run navigation aggregation <x> <y>')
-            sys.exit(1)
-    else:
-        try:
-            goal_x = float(input('Enter goal X (meters, relative to odom origin): '))
-            goal_y = float(input('Enter goal Y (meters, relative to odom origin): '))
-        except (ValueError, EOFError):
-            print('Invalid input. Exiting.')
-            sys.exit(1)
-
-    print(f'\nDriving both robots to ({goal_x:.3f}, {goal_y:.3f}) …\n')
-
+def main() -> None:
     rclpy.init()
 
-    robot1 = RobotDriver('/robot1', goal_x, goal_y)
-    robot3 = RobotDriver('/robot3', goal_x, goal_y)
+    # ── 1. Discover robots ────────────────────────────────────────────────────
+    discovery = DiscoveryNode()
+    namespaces = discovery.discover(timeout_sec=5.0)
+    discovery.destroy_node()
 
-    executor = MultiThreadedExecutor(num_threads=4)
-    executor.add_node(robot1)
-    executor.add_node(robot3)
+    if len(namespaces) < 2:
+        print(f'[aggregation] Need at least 2 robots, found {len(namespaces)}. Aborting.')
+        rclpy.shutdown()
+        return
+
+    print(f'\nStarting aggregation for: {" ↔ ".join(namespaces)}\n'
+          f'Equilibrium distance: {GOAL_TOLERANCE:.3f} m\n')
+
+    # ── 2. Build shared PeerState map (one per namespace) ─────────────────────
+    # Each PeerState is a lightweight shared position store subscribed to
+    # by a single OdomRelay node, then read by all other RobotDrivers.
+    peer_states: dict[str, PeerState] = {ns: PeerState(ns) for ns in namespaces}
+
+    # ── 3. Build one RobotDriver per namespace ────────────────────────────────
+    drivers: list[RobotDriver] = []
+    for ns in namespaces:
+        driver = RobotDriver(ns, namespaces)
+        for other_ns, state in peer_states.items():
+            if other_ns != ns:
+                driver.add_peer(state)
+        drivers.append(driver)
+
+    # ── 4. Wire odom → PeerState (each driver updates its own PeerState) ──────
+    # Re-use the driver's own _odom_cb to also push into the shared store.
+    # We patch post-construction so PeerState is populated for all peers.
+    for driver in drivers:
+        state = peer_states[driver.namespace]
+        original_cb = driver._odom_cb
+
+        def make_cb(orig, s):
+            def cb(msg):
+                orig(msg)
+                s.update(msg.pose.pose.position.x, msg.pose.pose.position.y)
+            return cb
+
+        driver._odom_cb = make_cb(original_cb, state)
+        # Re-register subscription with patched callback
+        driver.create_subscription(
+            Odometry, f'{driver.namespace}/odom', driver._odom_cb, 10)
+
+    # ── 5. Spin ───────────────────────────────────────────────────────────────
+    executor = MultiThreadedExecutor(num_threads=len(drivers) * 2)
+    for driver in drivers:
+        executor.add_node(driver)
+
+    last_log = 0.0
 
     try:
         while rclpy.ok():
             executor.spin_once(timeout_sec=0.05)
-            if robot1.done and robot3.done:
-                print('\nBoth robots have reached their goal. Shutting down.')
+
+            now = drivers[0].get_clock().now().nanoseconds * 1e-9
+            if (now - last_log) >= 1.0:
+                dists = all_pairwise_distances(drivers, peer_states)
+                if dists is not None:
+                    pos_strs = '  '.join(
+                        f'{ns}=({peer_states[ns].get_position().x:.3f},'
+                        f'{peer_states[ns].get_position().y:.3f})'
+                        for ns in namespaces
+                    )
+                    dist_strs = '  '.join(
+                        f'|{a.strip("/")}↔{b.strip("/")}|={d:.3f}m'
+                        for a, b, d in dists
+                    )
+                    print(f'[status]  {pos_strs}  {dist_strs}')
+                last_log = now
+
+            if all(d.done for d in drivers):
+                dists = all_pairwise_distances(drivers, peer_states)
+                print(f'\nAll robots aggregated.')
+                for ns in namespaces:
+                    p = peer_states[ns].get_position()
+                    print(f'  {ns} final: ({p.x:.3f}, {p.y:.3f})')
+                if dists:
+                    for a, b, d in dists:
+                        print(f'  |{a.strip("/")}↔{b.strip("/")}| = {d:.3f} m')
                 break
+
     except KeyboardInterrupt:
         print('\nInterrupted by user.')
     finally:
         stop = Twist()
-        robot1.cmd_pub.publish(stop)
-        robot3.cmd_pub.publish(stop)
-        robot1.destroy_node()
-        robot3.destroy_node()
+        for driver in drivers:
+            driver.cmd_pub.publish(stop)
+            driver.destroy_node()
         rclpy.shutdown()
 
 
