@@ -1,264 +1,318 @@
 #!/usr/bin/env python3
 """
-Drive robot1 and robot3 to a user-specified (x, y) coordinate simultaneously,
-using odometry feedback (/robotX/odom) to know when the target distance is reached.
-Robots use mecanum wheels and strafe directly without changing heading.
+Aggregate any three robots together using APF + odometry feedback.
+Robots use mecanum wheels and strafe without changing heading.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  TO CONFIGURE FOR A DIFFERENT ROBOT TRIO:
+  Only edit the three lines inside the "USER CONFIG" block below.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Usage:
-    ros2 run navigation aggregation <x> <y>
+    ros2 run navigation formation_control
 """
+
+import threading
+import math
 
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
-import math
-import sys
+from std_msgs.msg import Bool
 
 
-LINEAR_SPEED   = 0.2   # m/s – max speed in one axis
-GOAL_TOLERANCE = 0.25  # m
+# ══════════════════════════════════════════════════════════════════════════════
+#  USER CONFIG  ── only change these three lines to swap robot trios
+# ══════════════════════════════════════════════════════════════════════════════
+ROBOT_A = '/robot1'
+ROBOT_B = '/robot3'
+ROBOT_C = '/robot5'
+# ══════════════════════════════════════════════════════════════════════════════
 
-G_A = 0.2
-G_R = 0.1
+
+LINEAR_SPEED   = 5.0   # m/s  – max speed along dominant axis
+GOAL_TOLERANCE = (0.5 / 10.0) ** (1/3)  # natural APF equilibrium ≈ 0.368 m
+
+# APF gains
+G_A = 10.0  # attraction gain
+G_R = 0.5   # repulsion gain
+
+#Inter-agent distances
+DIST_12 = 1.0
+DIST_13 = 1.0
+DIST_23 = 1.0
+
+# Yaw-drift correction
+YAW_CORRECTION_GAIN       = 1.0   # rad/s per rad
+YAW_CORRECTION_MAX_RAD_S  = 0.5   # clamp (rad/s)
+YAW_CORRECTION_THRESH_RAD = 0.05  # deadband (~3°)
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def wrap_angle(angle: float) -> float:
+    return math.atan2(math.sin(angle), math.cos(angle))
 
 
 class Vec2:
+    """Minimal 2-D vector."""
+
     def __init__(self, x: float = 0.0, y: float = 0.0):
         self.x = x
         self.y = y
 
-    def __add__(self, other: 'Vec2') -> 'Vec2':
-        return Vec2(self.x + other.x, self.y + other.y)
-
-    def __sub__(self, other: 'Vec2') -> 'Vec2':
-        return Vec2(self.x - other.x, self.y - other.y)
-
-    def __mul__(self, scalar: float) -> 'Vec2':
-        return Vec2(self.x * scalar, self.y * scalar)
-
-    def __rmul__(self, scalar: float) -> 'Vec2':
-        return self.__mul__(scalar)
-
-    def __truediv__(self, scalar: float) -> 'Vec2':
-        return Vec2(self.x / scalar, self.y / scalar)
-
-    def __repr__(self) -> str:
-        return f'Vec2({self.x:.3f}, {self.y:.3f})'
+    def __neg__(self)           -> 'Vec2': return Vec2(-self.x, -self.y)
+    def __add__(self, o)        -> 'Vec2': return Vec2(self.x + o.x, self.y + o.y)
+    def __sub__(self, o)        -> 'Vec2': return Vec2(self.x - o.x, self.y - o.y)
+    def __mul__(self, s: float) -> 'Vec2': return Vec2(self.x * s,   self.y * s)
+    def __rmul__(self, s)       -> 'Vec2': return self.__mul__(s)
+    def __truediv__(self, s)    -> 'Vec2': return Vec2(self.x / s,   self.y / s)
+    def __repr__(self)          -> str:    return f'Vec2({self.x:.3f}, {self.y:.3f})'
 
     def norm(self) -> float:
         return math.hypot(self.x, self.y)
 
     def normalized(self) -> 'Vec2':
         n = self.norm()
-        return self / n if n > 1e-9 else Vec2(0.0, 0.0)
+        return self / n if n > 1e-9 else Vec2()
 
 
-def yaw_from_quaternion(q):
-    """Extract yaw (heading) from a geometry_msgs/Quaternion."""
+def yaw_from_quaternion(q) -> float:
     siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
     cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
     return math.atan2(siny_cosp, cosy_cosp)
 
 
+# ── RobotDriver ───────────────────────────────────────────────────────────────
+
 class RobotDriver(Node):
     """
-    Controls a single robot namespace.
-    Subscribes to /robotX/odom and publishes to /robotX/cmd_vel.
-    Strafes the robot to (goal_x, goal_y) without changing heading.
+    Controls one robot namespace.
+    Sums APF forces over ALL peers: J_i(x) = Σ_{j≠i} [J_a(||xi-xj||) - J_r(||xi-xj||)]
+    Thread-safe: peer positions are accessed under locks.
     """
 
-    def __init__(self, namespace: str):
+    def __init__(self, namespace: str, all_namespaces: list[str]):
         super().__init__(f'{namespace.strip("/")}_driver')
 
-        self.namespace   = namespace
+        self.namespace = namespace
+        self.peers: list['RobotDriver'] = []   # set via add_peer()
 
-        self.peer2: 'RobotDriver | None' = None
-        self.peer3: 'RobotDriver | None' = None
+        # ── thread-safe position ──────────────────────────────────────────────
+        self._pos_lock = threading.Lock()
+        self._pos: Vec2 | None = None
 
-        # Odometry state
-        self.pos: Vec2 | None = None
-        self.current_yaw = None
-        self.odom_ready  = False
+        self.current_yaw: float | None = None
+        self.start_yaw:   float | None = None
+        self.odom_ready   = False
 
-        # Done flag
-        self.done = False
+        # ── peer-ready handshake ──────────────────────────────────────────────
+        self.ready_peers    = set()
+        self.all_namespaces = set(all_namespaces) - {namespace}
+        self.all_ready      = False
+        self.done           = False
 
-        # Publisher & subscriber
-        self.cmd_pub = self.create_publisher(Twist, f'{namespace}/cmd_vel', 10)
-        self.odom_sub = self.create_subscription(Odometry, f'{namespace}/odom', self._odom_callback, 10)
+        # ── ROS I/O ───────────────────────────────────────────────────────────
+        self.cmd_pub   = self.create_publisher(Twist, f'{namespace}/cmd_vel', 10)
+        self.ready_pub = self.create_publisher(Bool,  f'{namespace}/ready',   10)
 
-        # Control loop at 20 Hz
-        self.timer = self.create_timer(0.05, self._control_loop)
+        self.create_subscription(
+            Odometry, f'{namespace}/odom', self._odom_cb, 10)
 
-    def set_peer(self, peer: 'RobotDriver', index: int):
-        """Wire up the other robot so _control_loop can read its position."""
-        if index == 1:
-            self.peer2 = peer
-        if index == 2:
-            self.peer3 = peer
+        for ns in all_namespaces:
+            if ns != namespace:
+                self.create_subscription(
+                    Bool, f'{ns}/ready',
+                    lambda msg, ns=ns: self._ready_cb(ns),
+                    10)
 
-    # ── Callbacks ─────────────────────────────────────────────────────────────
+        self.create_timer(0.05, self._control_loop)
+        self.get_logger().info(f'[{namespace}] Driver initialised.')
 
-    def _odom_callback(self, msg: Odometry):
+    # ── public API ────────────────────────────────────────────────────────────
+
+    def add_peer(self, peer: 'RobotDriver') -> None:
+        self.peers.append(peer)
+
+    def get_position(self) -> 'Vec2 | None':
+        """Thread-safe position read."""
+        with self._pos_lock:
+            return self._pos
+
+    # ── ROS callbacks ─────────────────────────────────────────────────────────
+
+    def _odom_cb(self, msg: Odometry) -> None:
         pose = msg.pose.pose
-        self.pos         = Vec2(pose.position.x, pose.position.y)
+
+        with self._pos_lock:
+            self._pos = Vec2(pose.position.x, pose.position.y)
+
         self.current_yaw = yaw_from_quaternion(pose.orientation)
         self.odom_ready  = True
 
-    def get_position(self) -> 'Vec2 | None':
-        """Return current position as a Vec2, or None if not yet received."""
-        return self.pos
+        if self.start_yaw is None:
+            self.start_yaw = self.current_yaw
+
+        if not self.all_ready:
+            self.ready_pub.publish(Bool(data=True))
+
+    def _ready_cb(self, peer_ns: str) -> None:
+        if self.all_ready:
+            return
+
+        self.ready_peers.add(peer_ns)
+
+        if self.all_namespaces.issubset(self.ready_peers):
+            self.all_ready = True
+            self.get_logger().info(
+                f'[{self.namespace}] All peers ready — starting aggregation!')
 
     # ── Control loop ──────────────────────────────────────────────────────────
 
-    def _control_loop(self):
-        if self.done or not self.odom_ready:
+    def _control_loop(self) -> None:
+        if self.done or not self.odom_ready or not self.all_ready:
+            return
+        if not all(p.odom_ready for p in self.peers):
+            return
+        if self.start_yaw is None:
             return
 
-        # Wait until peers have also received their first odometry messages
-        if self.peer2 is None or not self.peer2.odom_ready:
-            return
-        if self.peer3 is None or not self.peer3.odom_ready:
+        pos_self = self.get_position()
+        if pos_self is None:
             return
 
-        pos_1    = self.pos
-        pos_2    = self.peer2.pos
-        pos_3    = self.peer3.pos
+        # ── J_i(x) = Σ_{j≠i} [ J_a(||xi-xj||) - J_r(||xi-xj||) ] ──────────
+        f_total   = Vec2()
+        distances = []
 
-        # ── Inter-agent spring forces ──────────────────────────────────────
-        dist_12 = (pos_1 - pos_2).norm()
-        dist_13 = (pos_1 - pos_3).norm()
-        dist_23 = (pos_2 - pos_3).norm()
+        for peer in self.peers:
+            pos_peer = peer.get_position()
+            if pos_peer is None:
+                return
 
-        p12 = (G_A * ((pos_1 - pos_2).norm() - dist_12) - G_R * ((pos_1 - pos_2).norm() - dist_12) ) *(pos_1 - pos_2)
-        p13 = (G_A * ((pos_1 - pos_3).norm() - dist_13) - G_R * ((pos_1 - pos_3).norm() - dist_13) ) *(pos_1 - pos_3)
-        p21 = (G_A * ((pos_2 - pos_1).norm() - dist_12) - G_R * ((pos_2 - pos_1).norm() - dist_12) ) *(pos_2 - pos_1)
-        p23 = (G_A * ((pos_2 - pos_3).norm() - dist_23) - G_R * ((pos_2 - pos_3).norm() - dist_23) ) *(pos_2 - pos_3)
-        p31 = (G_A * ((pos_3 - pos_1).norm() - dist_13) - G_R * ((pos_3 - pos_1).norm() - dist_13) ) *(pos_3 - pos_1)
-        p32 = (G_A * ((pos_3 - pos_2).norm() - dist_23) - G_R * ((pos_3 - pos_2).norm() - dist_23) ) *(pos_3 - pos_2)
+            delta    = pos_self - pos_peer   # vector: peer → self
+            distance = delta.norm()
+            distances.append(distance)
 
-        force = p12 + p13
-        vx_sum = force.x
-        vy_sum = force.y
+            if distance < 1e-6:              # avoid division by zero
+                continue
 
-        distance = force.norm()
+            direction = delta.normalized()
 
-        twist = Twist()
+            # Negative gradient of J_a = ½·G_A·d²  →  -G_A·d (toward peer)
+            f_attract = -direction * G_A * distance
 
-        if distance < GOAL_TOLERANCE:
-            self.cmd_pub.publish(twist)   # zero velocity
+            # Negative gradient of J_r = ½·G_R/d²  →  +G_R/d² (away from peer)
+            f_repulse =  direction * G_R / (distance ** 2)
+
+            f_total = f_total + f_attract + f_repulse
+
+        # ── Goal check — ALL pairwise distances below tolerance ───────────────
+        if all(d < GOAL_TOLERANCE for d in distances):
+            self.cmd_pub.publish(Twist())
             self.done = True
             self.get_logger().info(
-                f'[{self.namespace}] Goal reached! '
-                f'Final pos: ({pos_1.x:.3f}, {pos_1.y:.3f})')
+                f'[{self.namespace}] Aggregation complete! '
+                f'dists={[f"{d:.3f}" for d in distances]}  '
+                f'pos=({pos_self.x:.3f}, {pos_self.y:.3f})')
             return
 
-        # ── Holonomic strafe: world-frame velocity → robot-local-frame ────
-        cos_yaw = math.cos(self.current_yaw)
-        sin_yaw = math.sin(self.current_yaw)
+        # ── World → body-frame transform ──────────────────────────────────────
+        c = math.cos(self.current_yaw)
+        s = math.sin(self.current_yaw)
 
-        local_x =  cos_yaw * vx_sum + sin_yaw * vy_sum
-        local_y = -sin_yaw * vx_sum + cos_yaw * vy_sum
+        local_x =  c * f_total.x + s * f_total.y
+        local_y = -s * f_total.x + c * f_total.y
 
-        max_component = max(abs(local_x), abs(local_y), 1e-6)
-        scale = LINEAR_SPEED / max_component
+        # ── Yaw-drift correction ──────────────────────────────────────────────
+        yaw_error = wrap_angle(self.current_yaw - self.start_yaw)
+        wz = 0.0
+        if abs(yaw_error) > YAW_CORRECTION_THRESH_RAD:
+            wz = max(
+                -YAW_CORRECTION_MAX_RAD_S,
+                min(YAW_CORRECTION_MAX_RAD_S, -YAW_CORRECTION_GAIN * yaw_error),
+            )
 
-        twist.linear.x = scale * local_x
-        twist.linear.y = scale * local_y
-
+        # ── Publish ───────────────────────────────────────────────────────────
+        twist = Twist()
+        twist.linear.x  = local_x
+        twist.linear.y  = local_y
+        twist.angular.z = wz
         self.cmd_pub.publish(twist)
+
         self.get_logger().info(
-            f'[{self.namespace}] dist={distance:.3f} m  '
-            f'vx={twist.linear.x:.3f}  vy={twist.linear.y:.3f}',
+            f'[{self.namespace}] dists={[f"{d:.3f}" for d in distances]}  '
+            f'vx={local_x:.3f}  vy={local_y:.3f}',
             throttle_duration_sec=0.5)
 
 
-def compute_inter_agent_distance(robot1: RobotDriver, robot3: RobotDriver) -> float | None:
-    """
-    Compute Euclidean distance between robot1 and robot3 in the odom frame.
-    Returns None if either robot has not yet received odometry.
-    """
-    pos1 = robot1.get_position()
-    pos2 = robot2.get_position()
-    pos3 = robot3.get_position()
+# ── Utility ───────────────────────────────────────────────────────────────────
 
-    if pos1 is None or pos3 is None:
-        return None
-
-    return (pos3 - pos1).norm()
+def all_pairwise_distances(robots: list[RobotDriver]) -> list[float] | None:
+    results = []
+    for i, a in enumerate(robots):
+        for b in robots[i+1:]:
+            pa, pb = a.get_position(), b.get_position()
+            if pa is None or pb is None:
+                return None
+            results.append((pa - pb).norm())
+    return results
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def main():
-    if len(sys.argv) == 3:
-        try:
-            goal_x = float(sys.argv[1])
-            goal_y = float(sys.argv[2])
-        except ValueError:
-            print('Usage: ros2 run navigation aggregation <x> <y>')
-            sys.exit(1)
-    else:
-        try:
-            goal_x = float(input('Enter goal X (meters, relative to odom origin): '))
-            goal_y = float(input('Enter goal Y (meters, relative to odom origin): '))
-        except (ValueError, EOFError):
-            print('Invalid input. Exiting.')
-            sys.exit(1)
-
-    print(f'\nDriving both robots to ({goal_x:.3f}, {goal_y:.3f}) …\n')
+def main() -> None:
+    print(f'\nStarting aggregation: {ROBOT_A} ↔ {ROBOT_B} ↔ {ROBOT_C}\n')
 
     rclpy.init()
 
-    robot1 = RobotDriver('/robot1', goal_x, goal_y)
-    robot2 = RobotDriver('/robot2', goal_x, goal_y)
-    robot3 = RobotDriver('/robot3', goal_x, goal_y)
+    namespaces = [ROBOT_A, ROBOT_B, ROBOT_C]
+    robot_a    = RobotDriver(ROBOT_A, namespaces)
+    robot_b    = RobotDriver(ROBOT_B, namespaces)
+    robot_c    = RobotDriver(ROBOT_C, namespaces)
 
-    # ── Wire peers BEFORE the executor starts spinning ────────────────────────
-    robot1.set_peer(robot2, 1)
-    robot1.set_peer(robot3, 2)
-    robot2.set_peer(robot1, 1)
-    robot2.set_peer(robot3, 2)
-    robot3.set_peer(robot1, 1)
-    robot3.set_peer(robot2, 2)
+    # Each robot tracks all others as peers (implements the Σ_{j≠i} sum)
+    robot_a.add_peer(robot_b); robot_a.add_peer(robot_c)
+    robot_b.add_peer(robot_a); robot_b.add_peer(robot_c)
+    robot_c.add_peer(robot_a); robot_c.add_peer(robot_b)
 
-    executor = MultiThreadedExecutor(num_threads=4)
-    executor.add_node(robot1)
-    executor.add_node(robot2)
-    executor.add_node(robot3)
+    executor = MultiThreadedExecutor(num_threads=6)
+    executor.add_node(robot_a)
+    executor.add_node(robot_b)
+    executor.add_node(robot_c)
 
-    last_distance_log = 0.0
+    robots   = [robot_a, robot_b, robot_c]
+    last_log = 0.0
 
     try:
         while rclpy.ok():
             executor.spin_once(timeout_sec=0.05)
 
-            pos1 = robot1.get_position()
-            pos3 = robot3.get_position()
-            inter_dist = compute_inter_agent_distance(robot1, robot3)
+            dists = all_pairwise_distances(robots)
+            now   = robot_a.get_clock().now().nanoseconds * 1e-9
 
-            now = robot1.get_clock().now().nanoseconds * 1e-9
-
-            if inter_dist is not None and (now - last_distance_log) >= 1.0:
+            if dists is not None and (now - last_log) >= 1.0:
+                positions = [r.get_position() for r in robots]
                 print(
-                    f'[distance]  '
-                    f'robot1=({pos1.x:.3f}, {pos1.y:.3f})  '
-                    f'robot3=({pos3.x:.3f}, {pos3.y:.3f})  '
-                    f'|Δ|={inter_dist:.3f} m'
+                    f'[status]  '
+                    f'{ROBOT_A}=({positions[0].x:.3f}, {positions[0].y:.3f})  '
+                    f'{ROBOT_B}=({positions[1].x:.3f}, {positions[1].y:.3f})  '
+                    f'{ROBOT_C}=({positions[2].x:.3f}, {positions[2].y:.3f})  '
+                    f'|Δ|={[f"{d:.3f}" for d in dists]}'
                 )
-                last_distance_log = now
+                last_log = now
 
-            if robot1.done and robot3.done:
-                pos1 = robot1.get_position()
-                pos3 = robot3.get_position()
-                final_dist = compute_inter_agent_distance(robot1, robot3)
+            if all(r.done for r in robots):
+                positions = [r.get_position() for r in robots]
+                dists     = all_pairwise_distances(robots)
                 print(
-                    f'\nBoth robots reached goal.\n'
-                    f'  robot1 final pos : ({pos1.x:.3f}, {pos1.y:.3f})\n'
-                    f'  robot3 final pos : ({pos3.x:.3f}, {pos3.y:.3f})\n'
-                    f'  Final inter-agent distance: {final_dist:.3f} m'
+                    f'\nAll robots aggregated.\n'
+                    f'  {ROBOT_A} final: ({positions[0].x:.3f}, {positions[0].y:.3f})\n'
+                    f'  {ROBOT_B} final: ({positions[1].x:.3f}, {positions[1].y:.3f})\n'
+                    f'  {ROBOT_C} final: ({positions[2].x:.3f}, {positions[2].y:.3f})\n'
+                    f'  Final pairwise distances: {[f"{d:.3f}" for d in dists]}'
                 )
                 break
 
@@ -266,10 +320,9 @@ def main():
         print('\nInterrupted by user.')
     finally:
         stop = Twist()
-        robot1.cmd_pub.publish(stop)
-        robot3.cmd_pub.publish(stop)
-        robot1.destroy_node()
-        robot3.destroy_node()
+        for r in robots:
+            r.cmd_pub.publish(stop)
+            r.destroy_node()
         rclpy.shutdown()
 
 
