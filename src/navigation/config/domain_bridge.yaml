@@ -1,0 +1,79 @@
+# domain_bridge.yaml
+# Bridges ONLY odom + cmd_vel between each robot's isolated domain and the
+# coordinator domain (10) where aggregation runs.
+#
+# Each robot must export ROS_DOMAIN_ID in ~/.bashrc:
+#   robot1 → 11,  robot2 → 12,  robot3 → 13
+#
+# Run this bridge on the coordinator (domain 10):
+#   ros2 launch navigation infrastructure.launch.py
+#
+# Inbound  (robot → coordinator): nav_msgs/Odometry  — position + velocity
+# Outbound (coordinator → robot): geometry_msgs/Twist — velocity commands
+
+bridges:
+  # ── Inbound: odom (robot domain → coordinator) ─────────────────────────────
+
+  - topic_name: /robot1/odom
+    type: nav_msgs/msg/Odometry
+    from_domain: 11
+    to_domain: 10
+    qos_options:
+      reliability: best_effort   # drop stale packets rather than queue them
+      durability: volatile
+      history: keep_last
+      depth: 1                   # only the latest reading matters
+
+  - topic_name: /robot2/odom
+    type: nav_msgs/msg/Odometry
+    from_domain: 12
+    to_domain: 10
+    qos_options:
+      reliability: best_effort
+      durability: volatile
+      history: keep_last
+      depth: 1
+
+  - topic_name: /robot3/odom
+    type: nav_msgs/msg/Odometry
+    from_domain: 13
+    to_domain: 10
+    qos_options:
+      reliability: best_effort
+      durability: volatile
+      history: keep_last
+      depth: 1
+
+  # ── Outbound: cmd_vel (coordinator → robot domain) ─────────────────────────
+  # aggregation.py publishes on domain 10; robots subscribe on domain 11/12/13.
+  # best_effort + depth 1 prevents stale commands queuing if a robot lags.
+
+  - topic_name: /robot1/controller/cmd_vel
+    type: geometry_msgs/msg/Twist
+    from_domain: 10
+    to_domain: 11
+    qos_options:
+      reliability: best_effort
+      durability: volatile
+      history: keep_last
+      depth: 1
+
+  - topic_name: /robot2/controller/cmd_vel
+    type: geometry_msgs/msg/Twist
+    from_domain: 10
+    to_domain: 12
+    qos_options:
+      reliability: best_effort
+      durability: volatile
+      history: keep_last
+      depth: 1
+
+  - topic_name: /robot3/controller/cmd_vel
+    type: geometry_msgs/msg/Twist
+    from_domain: 10
+    to_domain: 13
+    qos_options:
+      reliability: best_effort
+      durability: volatile
+      history: keep_last
+      depth: 1

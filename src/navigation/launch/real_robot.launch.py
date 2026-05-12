@@ -311,7 +311,7 @@ def generate_launch_description():
     return LaunchDescription([
         # Keep these environment values consistent across all robots.
         # If the team decides to use domain 0 instead, change this line on every robot.
-        SetEnvironmentVariable('ROS_DOMAIN_ID', '10'),
+        SetEnvironmentVariable('ROS_DOMAIN_ID', os.environ.get('ROS_DOMAIN_ID', '10')),
         SetEnvironmentVariable('RMW_IMPLEMENTATION', 'rmw_cyclonedds_cpp'),
         SetEnvironmentVariable('CYCLONEDDS_URI', dds_uri),
 

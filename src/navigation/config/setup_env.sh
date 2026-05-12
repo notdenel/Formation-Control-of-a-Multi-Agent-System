@@ -21,7 +21,14 @@ export CYCLONEDDS_URI=file://$HOME/ros2_ws/install/navigation/share/navigation/c
 # Use 10 because it was the last domain known to work in earlier multi-robot tests.
 # If the team confirms the latest start_nav tests used 0, change this and
 # scripts/setup_robot.sh to 0 together.
-export ROS_DOMAIN_ID=10
+# export ROS_DOMAIN_ID=10
+
+#   Robot 1:
+export ROS_DOMAIN_ID=11
+#   Robot 2:
+# export ROS_DOMAIN_ID=12
+#   Robot 3:
+# export ROS_DOMAIN_ID=13
 
 # ── Robot identity ────────────────────────────────────────────────────────────
 # Uncomment the ONE line that matches THIS robot, or set in ~/.bashrc directly.
