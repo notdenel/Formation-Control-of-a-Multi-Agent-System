@@ -213,10 +213,23 @@ class RobotDriver(Node):
             self.ready_pub.publish(Bool(data=True))
 
     def _joy_cb(self, msg: Twist) -> None:
-        """FIX 2: Only called on the primary driver — no N-times duplication."""
+        """Only called on the primary driver — no N-times duplication.
+
+        /robotN/controller/cmd_vel carries BODY-frame velocity (forward in
+        the robot's heading). Integrating it directly into a WORLD-frame
+        centroid is wrong as soon as the primary robot rotates. Rotate the
+        body-frame velocity into world frame using the primary robot's
+        current yaw before integrating.
+        """
+        if self.current_yaw is None:
+            return  # yaw not yet known — skip until first odom arrives
+        c = math.cos(self.current_yaw)
+        s = math.sin(self.current_yaw)
+        vx_world = c * msg.linear.x - s * msg.linear.y
+        vy_world = s * msg.linear.x + c * msg.linear.y
         with self.centroid_lock:
-            self.centroid.x += msg.linear.x * DT
-            self.centroid.y += msg.linear.y * DT
+            self.centroid.x += vx_world * DT
+            self.centroid.y += vy_world * DT
 
     def _ready_cb(self, peer_ns: str) -> None:
         if self.all_ready:

@@ -244,10 +244,15 @@ class RobotDriver(Node):
 
             direction = delta.normalized()
 
-            f_attract = -direction * G_A * distance
-            f_repulse =  direction * G_R / (distance ** 2)
-
-            f_total = f_total + f_attract + f_repulse
+            # Linear-symmetric APF (matches formation_control_3.py).
+            # The old 1/r^2 repulsion blew up to ~50 m/s² at d=0.1 m and
+            # alternated sign rapidly across GOAL_TOLERANCE ≈ 0.368 m,
+            # producing oscillation near equilibrium.
+            #   error = distance - GOAL_TOLERANCE  (+ too far, − too close)
+            #   too far  → force toward peer
+            #   too close → force away from peer
+            error = distance - GOAL_TOLERANCE
+            f_total = f_total + (-direction) * G_A * error
 
         # ── Goal check ────────────────────────────────────────────────────────
         if all(d < GOAL_TOLERANCE for d in distances):
@@ -263,8 +268,9 @@ class RobotDriver(Node):
         if f_norm < 1e-6:
             return
 
-        # APF naturally slows approach via growing repulsion — no ramp needed
-        LINEAR_SPEED = 1.0   # m/s — only sets the scale, not the profile
+        # Match formation_control.py and formation_control_3.py and stay
+        # inside the EKF acceleration_limits envelope (1.3 m/s²).
+        LINEAR_SPEED = 0.3   # m/s — sets scale; APF gives the direction
         world_vel    = f_total / f_norm * LINEAR_SPEED
 
         # ── World → body-frame ────────────────────────────────────────────────
