@@ -9,26 +9,35 @@
 source /opt/ros/jazzy/setup.bash
 source ~/ros2_ws/install/setup.bash
 
-# ── DDS: use CycloneDDS (more reliable for multi-robot Pi networks) ───────────
+# ── DDS: CycloneDDS (kept for stability; XML peer file is NOT used anymore) ──
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
-# ── Static peer discovery config ─────────────────────────────────────────────
-# Points CycloneDDS at the XML file that lists all robot IPs.
-export CYCLONEDDS_URI=file://$HOME/ros2_ws/install/navigation/share/navigation/config/cyclone_dds.xml
+# ── Per-machine ROS domain ───────────────────────────────────────────────────
+# Robots live in isolated per-robot domains:
+#   agent1 / robot1 → 11
+#   agent2 / robot2 → 12
+#   agent3 / robot3 → 13
+# The laptop / fleet observer lives in domain 10. Only the domain_bridge
+# process (launched separately via odom_bridge.launch.py on each robot)
+# crosses between a robot's private domain and the fleet domain.
+case "$(hostname)" in
+  agent1) export ROS_DOMAIN_ID=11 ;;
+  agent2) export ROS_DOMAIN_ID=12 ;;
+  agent3) export ROS_DOMAIN_ID=13 ;;
+  *)      export ROS_DOMAIN_ID=10 ;;
+esac
 
-# ── ROS domain: keep all three robots on the same isolated domain ─────────────
-# This must match on every robot and laptop/RViz terminal.
-# Use 10 because it was the last domain known to work in earlier multi-robot tests.
-# If the team confirms the latest start_nav tests used 0, change this and
-# scripts/setup_robot.sh to 0 together.
-# export ROS_DOMAIN_ID=10
-
-#   Robot 1:
-export ROS_DOMAIN_ID=11
-#   Robot 2:
-# export ROS_DOMAIN_ID=12
-#   Robot 3:
-# export ROS_DOMAIN_ID=13
+# ── Static peers (laptop only) ───────────────────────────────────────────────
+# Robots use LOCALHOST discovery; they never need static peers. The laptop
+# in domain 10 needs to find each robot's bridge process, so it gets a
+# static peer list of every robot IP.
+if [ "$ROS_DOMAIN_ID" = "10" ]; then
+  export ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
+  export ROS_STATIC_PEERS=172.31.113.136:172.31.89.63:172.31.115.94
+else
+  export ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+  unset ROS_STATIC_PEERS
+fi
 
 # ── Robot identity ────────────────────────────────────────────────────────────
 # Uncomment the ONE line that matches THIS robot, or set in ~/.bashrc directly.
@@ -41,8 +50,8 @@ export MACHINE_TYPE=MentorPi_Mecanum  # mecanum base: enables linear.x, linear.y
 export LIDAR_TYPE=LD19               # adjust to your lidar model
 
 # Avoid restricting ROS discovery to localhost during multi-robot testing.
-unset ROS_AUTOMATIC_DISCOVERY_RANGE
-# We are using CycloneDDS XML peers, not the older/nonstandard ROS_STATIC_PEERS env.
-unset ROS_STATIC_PEERS
+# (Discovery range is set above per-domain.)
+# CYCLONEDDS_URI is no longer used; domain isolation replaces the XML peer file.
+unset CYCLONEDDS_URI
 
 echo "[setup_env] RMW=${RMW_IMPLEMENTATION}  DOMAIN=${ROS_DOMAIN_ID}  ROBOT=${ROBOT_NAME:-unset}"

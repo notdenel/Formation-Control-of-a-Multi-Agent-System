@@ -304,16 +304,11 @@ def launch_setup(context, *args, **kwargs):
 
 
 def generate_launch_description():
-    pkg_nav = get_package_share_directory('navigation')
-    dds_cfg = os.path.join(pkg_nav, 'config', 'cyclone_dds.xml')
-    dds_uri = f'file://{dds_cfg}'
-
     return LaunchDescription([
-        # Keep these environment values consistent across all robots.
-        # If the team decides to use domain 0 instead, change this line on every robot.
-        SetEnvironmentVariable('ROS_DOMAIN_ID', os.environ.get('ROS_DOMAIN_ID', '10')),
-        SetEnvironmentVariable('RMW_IMPLEMENTATION', 'rmw_cyclonedds_cpp'),
-        SetEnvironmentVariable('CYCLONEDDS_URI', dds_uri),
+        # ROS_DOMAIN_ID and RMW_IMPLEMENTATION are inherited from the shell
+        # (setup_robot.sh). DO NOT override them here — per-robot domain
+        # isolation depends on the shell exports. CYCLONEDDS_URI is no
+        # longer used because the XML peer file has been retired.
 
         # Hardware platform settings.
         SetEnvironmentVariable('MACHINE_TYPE', 'MentorPi_Mecanum'),

@@ -88,17 +88,6 @@ def generate_launch_description():
         }],
     )
 
-    # Bridges /robotN/odom from each robot's isolated domain (11/12/13) into
-    # this coordinator domain (10).  Only position + velocity cross the network;
-    # all sensor, TF, and nav2 topics stay local to each robot.
-    odom_bridge = Node(
-        package='domain_bridge',
-        executable='domain_bridge',
-        name='odom_domain_bridge',
-        output='screen',
-        arguments=['--config', os.path.join(pkg_dir, 'config', 'domain_bridge.yaml')],
-    )
-
     # rviz:=true only on a machine that has the rviz2 binary (not a headless Pi)
     rviz = Node(
         package='rviz2',
@@ -115,6 +104,5 @@ def generate_launch_description():
         map_server,
         map_lifecycle,
         pose_aggregator,
-        odom_bridge,
         TimerAction(period=2.0, actions=[rviz]),
     ])

@@ -1,0 +1,36 @@
+# odom_bridge.yaml — domain_bridge config for one robot.
+#
+# The launch file fills in __ROBOT_NS__ and __PRIVATE_DOMAIN__ via simple
+# template substitution at launch time (see odom_bridge.launch.py). What
+# crosses domains:
+#   private → fleet (domain 10):  /<ns>/odom          (Odometry)
+#                                 /<ns>/amcl_pose     (PoseWithCovarianceStamped)
+#   fleet → private:              /<ns>/controller/cmd_vel  (Twist)
+#                                 /<ns>/initialpose   (PoseWithCovarianceStamped)
+#
+# Everything else (scan_raw, odom_rf2o, /tf, /tf_static, imu, /map, etc.)
+# stays on the robot's private domain. /map in particular is local to each
+# robot — every robot runs its own map_server.
+
+name: odom_bridge
+topics:
+  /__ROBOT_NS__/odom:
+    type: nav_msgs/msg/Odometry
+    from_domain: __PRIVATE_DOMAIN__
+    to_domain: 10
+  /__ROBOT_NS__/amcl_pose:
+    type: geometry_msgs/msg/PoseWithCovarianceStamped
+    from_domain: __PRIVATE_DOMAIN__
+    to_domain: 10
+    qos:
+      durability: transient_local
+  /__ROBOT_NS__/controller/cmd_vel:
+    type: geometry_msgs/msg/Twist
+    from_domain: 10
+    to_domain: __PRIVATE_DOMAIN__
+  # Allows RViz on the laptop ("2D Pose Estimate" tool) or a CLI publish
+  # from the laptop to seed AMCL on the robot's private domain.
+  /__ROBOT_NS__/initialpose:
+    type: geometry_msgs/msg/PoseWithCovarianceStamped
+    from_domain: 10
+    to_domain: __PRIVATE_DOMAIN__

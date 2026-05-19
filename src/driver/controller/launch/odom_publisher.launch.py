@@ -1,7 +1,7 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 
-from launch import LaunchDescription, LaunchService
+from launch import LaunchDescription
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -9,29 +9,22 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 
 
 def generate_launch_description():
-    namespace = LaunchConfiguration('namespace', default='')
-    use_namespace = LaunchConfiguration('use_namespace', default='false')
-    odom_frame = LaunchConfiguration('odom_frame', default='odom')
-    base_frame = LaunchConfiguration('base_frame', default='base_footprint')
-    imu_frame = LaunchConfiguration('imu_frame', default='imu_link')
-    frame_prefix = LaunchConfiguration('frame_prefix', default='')
-
-    namespace_arg = DeclareLaunchArgument('namespace', default_value=namespace)
-    use_namespace_arg = DeclareLaunchArgument('use_namespace', default_value=use_namespace)
-    odom_frame_arg = DeclareLaunchArgument('odom_frame', default_value=odom_frame)
-    base_frame_arg = DeclareLaunchArgument('base_frame', default_value=base_frame)
-    imu_frame_arg = DeclareLaunchArgument('imu_frame', default_value=imu_frame)
-    frame_prefix_arg = DeclareLaunchArgument('frame_prefix', default_value=frame_prefix)
+    odom_frame = LaunchConfiguration('odom_frame')
+    base_frame = LaunchConfiguration('base_frame')
+    imu_frame  = LaunchConfiguration('imu_frame')
 
     robot_controller_package_path = get_package_share_directory('ros_robot_controller')
-    controller_package_path = get_package_share_directory('controller')
+    controller_package_path       = get_package_share_directory('controller')
 
+    # ros_robot_controller publishes /ros_robot_controller/imu_raw and subscribes
+    # to /ros_robot_controller/set_motor etc. All relative. PushRosNamespace
+    # applied by the parent launch (controller.launch.py) prefixes them.
     robot_controller_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(robot_controller_package_path, 'launch/ros_robot_controller.launch.py')
         ),
         launch_arguments={
-            'imu_frame': imu_frame,
+            'imu_frame': imu_frame,  # already namespace-qualified by caller
         }.items()
     )
 
@@ -43,40 +36,20 @@ def generate_launch_description():
         parameters=[
             os.path.join(controller_package_path, 'config/calibrate_params.yaml'),
             {
-                'base_frame_id': base_frame,
-                'odom_frame_id': odom_frame,
+                'base_frame_id':  base_frame,   # already namespace-qualified
+                'odom_frame_id':  odom_frame,   # already namespace-qualified
                 'pub_odom_topic': True,
             }
         ],
-    )
-
-    lidar_tf_publisher = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='lidar_tf_publisher',
-        arguments=[
-            '--x', '0', '--y', '0', '--z', '0',
-            '--yaw', '0', '--pitch', '0', '--roll', '0'
-            # '--frame-id', 'base_footprint',
-            # '--child-frame-id', 'lidar_frame'
-        ]
+        # No explicit remappings: all topics in odom_publisher_node are
+        # relative ('odom_raw', 'controller/cmd_vel', 'set_pose', etc.) and
+        # are namespaced automatically by the parent's PushRosNamespace.
     )
 
     return LaunchDescription([
-        namespace_arg,
-        use_namespace_arg,
-        odom_frame_arg,
-        base_frame_arg,
-        imu_frame_arg,
-        frame_prefix_arg,
+        DeclareLaunchArgument('odom_frame', default_value='odom'),
+        DeclareLaunchArgument('base_frame', default_value='base_footprint'),
+        DeclareLaunchArgument('imu_frame',  default_value='imu_link'),
         robot_controller_launch,
         odom_publisher_node,
     ])
-
-
-if __name__ == '__main__':
-    ld = generate_launch_description()
-
-    ls = LaunchService()
-    ls.include_launch_description(ld)
-    ls.run()

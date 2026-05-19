@@ -102,18 +102,18 @@ def launch_setup(context, *args, **kwargs):
 
         # Static TF: base_footprint → lidar_frame.
         # Frame IDs are NEVER auto-namespaced by ROS — must be fully qualified.
-        Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='lidar_static_tf',
-            output='screen',
-            arguments=[
-                '--x', '0.0', '--y', '0.0', '--z', '0.10',
-                '--roll', '0.0', '--pitch', '0.0', '--yaw', '0.0',
-                '--frame-id', f'{robot_name}/base_footprint',
-                '--child-frame-id', f'{robot_name}/{lidar_frame}',
-            ],
-        ),
+        # Node(
+        #     package='tf2_ros',
+        #     executable='static_transform_publisher',
+        #     name='lidar_static_tf',
+        #     output='screen',
+        #     arguments=[
+        #         '--x', '0.0', '--y', '0.0', '--z', '0.10',
+        #         '--roll', '0.0', '--pitch', '0.0', '--yaw', '0.0',
+        #         '--frame-id', f'{robot_name}/base_footprint',
+        #         '--child-frame-id', f'{robot_name}/{lidar_frame}',
+        #     ],
+        # ),
     ]
 
     # Lifecycle manager: configures + activates map_server then amcl.

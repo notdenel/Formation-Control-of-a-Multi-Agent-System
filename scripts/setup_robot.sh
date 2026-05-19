@@ -30,7 +30,9 @@ sudo apt install -y \
   ros-jazzy-navigation2 \
   ros-jazzy-nav2-bringup \
   ros-jazzy-slam-toolbox \
-  ros-jazzy-rmw-cyclonedds-cpp
+  ros-jazzy-domain-bridge \
+  ros-jazzy-rmw-cyclonedds-cpp \
+  ros-jazzy-domain-bridge
 
 echo "[INFO] Installing udev rules..."
 sudo cp config/udev/99-senior-design-robot.rules /etc/udev/rules.d/
@@ -73,19 +75,28 @@ if [ -f "$HOME/ros2_ws/install/setup.bash" ]; then
 fi
 
 case "$(hostname)" in
-  agent1) export ROBOT_NAME=robot1 ;;
-  agent2) export ROBOT_NAME=robot2 ;;
-  agent3) export ROBOT_NAME=robot3 ;;
-  *) export ROBOT_NAME="${ROBOT_NAME:-robot}" ;;
+  agent1) export ROBOT_NAME=robot1; export ROS_DOMAIN_ID=11 ;;
+  agent2) export ROBOT_NAME=robot2; export ROS_DOMAIN_ID=12 ;;
+  agent3) export ROBOT_NAME=robot3; export ROS_DOMAIN_ID=13 ;;
+  *) export ROBOT_NAME="${ROBOT_NAME:-robot}"; export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-10}" ;;
 esac
 
-export ROS_DOMAIN_ID=10
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/navigation/config/cyclone_dds.xml
 export MACHINE_TYPE=MentorPi_Mecanum
 export LIDAR_TYPE=LD19
 
-unset ROS_AUTOMATIC_DISCOVERY_RANGE
+# Each robot lives in an isolated per-robot domain. Lidar / rf2o / tf
+# never leave the Pi. The domain_bridge process is the only thing that
+# bridges /robotN/odom outbound and /robotN/controller/cmd_vel inbound
+# to the shared fleet domain (10).
+#
+# LOCALHOST keeps DDS discovery on the loopback interface for the robot's
+# own domain. The bridge process itself joins domain 10 with SUBNET via
+# odom_bridge.launch.py, which spawns it in a clean env. So no static
+# peer list is needed here.
+export ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+
+unset CYCLONEDDS_URI
 unset ROS_STATIC_PEERS
 unset ROS_LOCALHOST_ONLY
 # <<< senior design ros2 <<<
