@@ -28,12 +28,8 @@
 
   <Domain id="any">
     <General>
-      <!-- wlan0 on the Pis. On WSL the interface is typically eth0
-           (the vEthernet adapter), so a second entry is added. CycloneDDS
-           uses whichever exists. -->
       <Interfaces>
-        <NetworkInterface name="wlan0" priority="default" multicast="default"/>
-        <NetworkInterface name="eth0"  priority="default" multicast="default"/>
+        <NetworkInterface autodetermine="true" priority="default" multicast="default"/>
       </Interfaces>
       <AllowMulticast>false</AllowMulticast>
       <EnableMulticastLoopback>false</EnableMulticastLoopback>
@@ -43,14 +39,12 @@
     <Discovery>
       <Peers>
         <Peer address="127.0.0.1"/>
-        <Peer address="172.31.113.136"/> <!-- agent1 / robot1 -->
-        <Peer address="172.31.89.63"/>   <!-- agent2 / robot2 -->
-        <Peer address="172.31.115.94"/>  <!-- agent3 / robot3 -->
-        <Peer address="172.31.78.102"/>  <!-- coordinator laptop (WSL) -->
+        <Peer address="172.31.113.136"/>
+        <Peer address="172.31.89.63"/>
+        <Peer address="172.31.115.94"/>
+        <Peer address="172.31.78.102"/>
       </Peers>
       <ParticipantIndex>auto</ParticipantIndex>
-      <!-- domain_bridge joins two domains in one process and chews
-           through participant slots — bump the cap. -->
       <MaxAutoParticipantIndex>60</MaxAutoParticipantIndex>
     </Discovery>
 
