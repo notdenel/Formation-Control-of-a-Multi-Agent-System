@@ -1,32 +1,21 @@
 """
 infrastructure.launch.py
 ========================
-Shared base: map_server + pose_aggregator.
-Run this on the Pi.  RViz runs on your desktop (see below).
+Coordinator-side stack. Run this on the WSL laptop in domain 10.
 
   ros2 launch navigation infrastructure.launch.py
 
-Add robots in separate terminals:
+Starts:
+  - map_server                       (domain 10)
+  - pose_aggregator                  (domain 10)
+  - domain_bridge for /robot1/odom and /robot1/controller/cmd_vel
+  - domain_bridge for /robot2/odom and /robot2/controller/cmd_vel
+  - domain_bridge for /robot3/odom and /robot3/controller/cmd_vel
 
-  Fake robot (static, movable via RViz 2D Pose Estimate):
-    ros2 run navigation robot_pose_broadcaster \\
-        --ros-args -p robot_name:=robot1 -p x:=0.0 -p y:=0.0
-
-  Fake robot (wandering circle):
-    ros2 run navigation robot_pose_broadcaster \\
-        --ros-args -p robot_name:=robot2 -p x:=2.0 -p wander:=true
-
-  Real robot hardware:
-    ros2 launch navigation real_robot.launch.py robot_name:=robot1
-
-Move a fake robot from CLI:
-    ros2 topic pub --once /robot2/initialpose \\
-        geometry_msgs/PoseWithCovarianceStamped \\
-        '{header:{frame_id: map}, pose:{pose:{position:{x: 1.5, y: 0.5}}}}'
-
-RViz on desktop (WSL/laptop — same ROS_DOMAIN_ID as Pi):
-  rviz2 -d <path>/navigation/rviz/multi_robot.rviz
-  Fixed Frame: map  |  Add Map: /map  |  Add Pose: /robot1/amcl_pose etc.
+The domain_bridge process joins BOTH domains itself, so it does not matter
+which ROS_DOMAIN_ID is exported in this terminal — but the rest of this
+launch (map_server, pose_aggregator) does run in the shell's domain,
+which must be 10 so it matches the aggregator.
 """
 
 import os
@@ -42,6 +31,7 @@ def generate_launch_description():
     pkg_dir  = get_package_share_directory('navigation')
     map_yaml = os.path.join(pkg_dir, 'config', 'maps', 'map_01.yaml')
     rviz_cfg = os.path.join(pkg_dir, 'rviz', 'multi_robot.rviz')
+    bridge_yaml = os.path.join(pkg_dir, 'config', 'domain_bridge.yaml')
 
     use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='false')
     rviz_arg = DeclareLaunchArgument(
@@ -88,7 +78,17 @@ def generate_launch_description():
         }],
     )
 
-    # rviz:=true only on a machine that has the rviz2 binary (not a headless Pi)
+    # Domain bridge: carries /robotN/odom from each robot's private domain
+    # into domain 10 and /robotN/controller/cmd_vel back out.
+    # Reads bridges definition from config/domain_bridge.yaml.
+    domain_bridge = Node(
+        package='domain_bridge',
+        executable='domain_bridge',
+        name='odom_cmd_vel_bridge',
+        arguments=[bridge_yaml],
+        output='screen',
+    )
+
     rviz = Node(
         package='rviz2',
         executable='rviz2',
@@ -104,5 +104,6 @@ def generate_launch_description():
         map_server,
         map_lifecycle,
         pose_aggregator,
+        domain_bridge,
         TimerAction(period=2.0, actions=[rviz]),
     ])

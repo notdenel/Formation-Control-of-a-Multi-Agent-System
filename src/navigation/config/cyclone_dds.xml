@@ -1,19 +1,25 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
-  CycloneDDS static peer discovery for 3 robots on a shared network.
+  CycloneDDS static-peer discovery for 3 robots + 1 coordinator laptop.
 
-  Static peer IPs for the current three-robot setup:
-    agent1 / robot1: 172.31.113.136
-    agent2 / robot2: 172.31.89.63
-    agent3 / robot3: 172.31.115.94
+  Strategy (matches setup_env.sh and infrastructure.launch.py):
+    robot1 (agent1) lives in ROS_DOMAIN_ID 11   — 172.31.113.136
+    robot2 (agent2) lives in ROS_DOMAIN_ID 12   — 172.31.89.63
+    robot3 (agent3) lives in ROS_DOMAIN_ID 13   — 172.31.115.94
+    coordinator     lives in ROS_DOMAIN_ID 10   — 172.31.78.102 (WSL laptop)
 
-  Set CYCLONEDDS_URI to the path of this file on each robot:
+  A domain_bridge process on the coordinator joins each robot's private
+  domain AND domain 10, bridging /robotN/odom inbound and
+  /robotN/controller/cmd_vel outbound. That bridge needs SUBNET discovery
+  on the laptop side, which is why the laptop is also a static peer of
+  every robot.
+
+  Set CYCLONEDDS_URI on every machine:
     export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/navigation/config/cyclone_dds.xml
-  Or source setup_env.sh which does this automatically.
+  (setup_env.sh already does this.)
 
-  All three robots must be on the same ROS_DOMAIN_ID. This project currently
-  standardizes on domain 10 because that was the last known working domain in
-  earlier multi-robot tests. Domain 0 is also fine if every robot/terminal uses it.
+  If the WSL laptop's WiFi IP changes (run `hostname -I` to confirm),
+  update <Peer address="..."> below AND LAPTOP_IP in setup_env.sh.
 -->
 <CycloneDDS
   xmlns="https://cdds.io/config"
@@ -22,34 +28,30 @@
 
   <Domain id="any">
     <General>
-      <!-- wlan0 is the active interface (eth0 has no carrier) -->
+      <!-- wlan0 on the Pis. On WSL the interface is typically eth0
+           (the vEthernet adapter), so a second entry is added. CycloneDDS
+           uses whichever exists. -->
       <Interfaces>
         <NetworkInterface name="wlan0" priority="default" multicast="default"/>
+        <NetworkInterface name="eth0"  priority="default" multicast="default"/>
       </Interfaces>
-      <!-- Disable multicast — rely solely on static unicast peers below -->
       <AllowMulticast>false</AllowMulticast>
       <EnableMulticastLoopback>false</EnableMulticastLoopback>
       <MaxMessageSize>65500B</MaxMessageSize>
     </General>
 
     <Discovery>
-      <!--
-        Static peer list for the current robot fleet.
-        Keep this same file on all three robots. Including all three robot IPs on
-        every robot is fine and avoids needing per-robot XML variants.
-
-        If you run RViz or a centralized controller from a laptop on a multicast-
-        blocked network, the laptop should also use this XML. If laptop discovery
-        is still unreliable, add the laptop's current Wi-Fi IP here too.
-      -->
       <Peers>
-        <Peer address="127.0.0.1"/> <!-- localhost / same-machine CLI -->
+        <Peer address="127.0.0.1"/>
         <Peer address="172.31.113.136"/> <!-- agent1 / robot1 -->
-        <Peer address="172.31.89.63"/>  <!-- agent2 / robot2 -->
-        <Peer address="172.31.115.94"/> <!-- agent3 / robot3 -->
+        <Peer address="172.31.89.63"/>   <!-- agent2 / robot2 -->
+        <Peer address="172.31.115.94"/>  <!-- agent3 / robot3 -->
+        <Peer address="172.31.78.102"/>  <!-- coordinator laptop (WSL) -->
       </Peers>
       <ParticipantIndex>auto</ParticipantIndex>
-      <MaxAutoParticipantIndex>32</MaxAutoParticipantIndex>
+      <!-- domain_bridge joins two domains in one process and chews
+           through participant slots — bump the cap. -->
+      <MaxAutoParticipantIndex>60</MaxAutoParticipantIndex>
     </Discovery>
 
     <Tracing>

@@ -417,7 +417,12 @@ def main() -> None:
     finally:
         stop = Twist()
         for driver in drivers:
-            driver.cmd_pub.publish(stop)
+            # Publish a few times across ~0.3 s so the bridge has time to
+            # forward the message before the publisher tears down.
+            for _ in range(6):
+                driver.cmd_pub.publish(stop)
+                executor.spin_once(timeout_sec=0.05)
+        for driver in drivers:
             driver.destroy_node()
         rclpy.shutdown()
 
