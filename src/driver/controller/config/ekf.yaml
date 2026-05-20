@@ -67,10 +67,14 @@
       #     3a. Set your "world_frame" to your map_frame value
       #     3b. MAKE SURE something else is generating the odom->base_link transform. Note that this can even be another state
       #         estimation node from robot_localization! However, that instance should *not* fuse the global data.
-      map_frame: map              # Defaults to "map" if unspecified
-      odom_frame: namespace/odom            # Defaults to "odom" if unspecified
-      base_link_frame: namespace/base_footprint  # Defaults to "base_link" if unspecified
-      world_frame: namespace/odom           # Defaults to the value of odom_frame if unspecified
+      map_frame: map
+      odom_frame: namespace/odom
+      base_link_frame: namespace/base_footprint
+      # world_frame: map causes the EKF to estimate pose in the map frame and
+      # publish two TFs: odom→base_footprint (local) and map→odom (global
+      # correction from AMCL).  AMCL tf_broadcast must be false so only one
+      # node publishes map→odom.
+      world_frame: map
 
       # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
       # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
@@ -138,6 +142,21 @@
       odom1_differential: false
       odom1_relative: true
       odom1_queue_size: 2
+
+      # AMCL global pose — provides x, y, yaw in the map frame.
+      # This is the sensor that anchors the EKF to the map and lets it output
+      # a globally-corrected odometry on /robotX/odom.  AMCL's tf_broadcast
+      # must be false (set in nav2_params_robotX.yaml) because the EKF now
+      # owns the map→odom transform.
+      pose0: amcl_pose
+      pose0_config: [true,  true,  false,
+                     false, false, true,
+                     false, false, false,
+                     false, false, false,
+                     false, false, false]
+      pose0_differential: false
+      pose0_relative: false
+      pose0_queue_size: 1
 
 
 

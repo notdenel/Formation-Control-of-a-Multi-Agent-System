@@ -71,7 +71,7 @@ def launch_setup(context, *args, **kwargs):
         'odom_frame_id':  f'{robot_name}/odom',
         'base_frame_id':  f'{robot_name}/base_footprint',
         'global_frame_id': 'map',
-        'tf_broadcast':   True,
+        'tf_broadcast':   False,
     }
 
     # nav2_amcl in Jazzy uses a sensor-data QoS (best-effort, depth=10) on the

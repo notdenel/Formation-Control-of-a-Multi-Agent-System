@@ -109,23 +109,9 @@ def launch_setup(context, *args, **kwargs):
         }],
     )
 
-    # ── Static TF: base_footprint → lidar_frame ───────────────────────────────
-    # SLAM toolbox needs this to place scans in the correct frame.
-    # Adjust z (0.10 m) to match your actual lidar mounting height.
-    static_lidar_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='lidar_static_tf',
-        output='screen',
-        arguments=[
-            '--x', '0.0', '--y', '0.0', '--z', '0.10',
-            '--roll', '0.0', '--pitch', '0.0', '--yaw', '0.0',
-            '--frame-id',       f'{robot_name}/base_footprint',
-            '--child-frame-id', f'{robot_name}/lidar_frame',
-        ],
-    )
+    # Static lidar TF is published by peripherals/launch/lidar.launch.py.
 
-    return [lidar_group, controller, rf2o, static_lidar_tf]
+    return [lidar_group, controller, rf2o]
 
 
 def generate_launch_description():

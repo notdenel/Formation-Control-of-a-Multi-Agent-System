@@ -1,16 +1,26 @@
 # odom_bridge.yaml — domain_bridge config for one robot.
 #
-# The launch file fills in __ROBOT_NS__ and __PRIVATE_DOMAIN__ via simple
-# template substitution at launch time (see odom_bridge.launch.py). What
-# crosses domains:
-#   private → fleet (domain 10):  /<ns>/odom          (Odometry)
-#                                 /<ns>/amcl_pose     (PoseWithCovarianceStamped)
-#   fleet → private:              /<ns>/controller/cmd_vel  (Twist)
-#                                 /<ns>/initialpose   (PoseWithCovarianceStamped)
+# Template variables filled by odom_bridge.launch.py at launch time:
+#   __ROBOT_NS__       — this robot's namespace, e.g. robot1
+#   __PRIVATE_DOMAIN__ — this robot's private ROS_DOMAIN_ID (11 / 12 / 13)
+#   __PEER1_NS__       — first peer namespace
+#   __PEER2_NS__       — second peer namespace
 #
-# Everything else (scan_raw, odom_rf2o, /tf, /tf_static, imu, /map, etc.)
-# stays on the robot's private domain. /map in particular is local to each
-# robot — every robot runs its own map_server.
+# What crosses domains:
+#   private → fleet (10):  /__ROBOT_NS__/odom        (Odometry)
+#   fleet → private:       /__PEER1_NS__/odom         (Odometry)
+#                          /__PEER2_NS__/odom         (Odometry)
+#
+# Only nav_msgs/Odometry crosses the domain boundary.  Odometry carries both
+# position (pose.pose.position) and velocity (twist.twist) so the on-robot
+# aggregation node has everything it needs for APF.
+#
+# cmd_vel, amcl_pose, initialpose, scan, TF etc. stay local to each robot's
+# private domain.  Aggregation runs ON each robot and publishes cmd_vel in
+# the private domain — no reverse bridge needed, minimising WiFi traffic.
+#
+# To seed AMCL on a robot, SSH into it and publish /robotX/initialpose
+# directly on its private domain.
 
 name: odom_bridge
 topics:
@@ -18,19 +28,13 @@ topics:
     type: nav_msgs/msg/Odometry
     from_domain: __PRIVATE_DOMAIN__
     to_domain: 10
-  /__ROBOT_NS__/amcl_pose:
-    type: geometry_msgs/msg/PoseWithCovarianceStamped
-    from_domain: __PRIVATE_DOMAIN__
-    to_domain: 10
-    qos:
-      durability: transient_local
-  /__ROBOT_NS__/controller/cmd_vel:
-    type: geometry_msgs/msg/Twist
+
+  /__PEER1_NS__/odom:
+    type: nav_msgs/msg/Odometry
     from_domain: 10
     to_domain: __PRIVATE_DOMAIN__
-  # Allows RViz on the laptop ("2D Pose Estimate" tool) or a CLI publish
-  # from the laptop to seed AMCL on the robot's private domain.
-  /__ROBOT_NS__/initialpose:
-    type: geometry_msgs/msg/PoseWithCovarianceStamped
+
+  /__PEER2_NS__/odom:
+    type: nav_msgs/msg/Odometry
     from_domain: 10
     to_domain: __PRIVATE_DOMAIN__

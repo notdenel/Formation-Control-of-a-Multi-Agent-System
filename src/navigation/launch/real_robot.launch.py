@@ -114,11 +114,15 @@ def launch_setup(context, *args, **kwargs):
 
     # Lidar driver.
     # Inside PushRosNamespace(robot_name), scan_raw resolves to /robotX/scan_raw.
+    # base_frame must be passed as the fully-qualified name so lidar.launch.py's
+    # qualify() leaves it unchanged and the static TF publishes
+    # robot1/base_footprint → robot1/lidar_frame (not bare base_footprint).
     lidar = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(lidar_launch),
         launch_arguments={
             'scan_raw': _SCAN_TOPIC,
             'lidar_frame': lidar_frame,
+            'base_frame': base_frame,
         }.items(),
     )
 
@@ -253,9 +257,33 @@ def launch_setup(context, *args, **kwargs):
         }.items(),
     )
 
+    odom_bridge_launch = os.path.join(pkg_nav, 'launch', 'odom_bridge.launch.py')
+    odom_bridge = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(odom_bridge_launch),
+        launch_arguments={'robot_name': robot_name}.items(),
+    )
+
+    # Aggregation — runs locally on this robot in its private domain.
+    # Delayed 20 s so the EKF is publishing odom and the domain_bridge has
+    # connected to the fleet domain before discovery runs.
+    # Peer /robotY/odom and /robotZ/odom arrive via odom_bridge (domain 10 →
+    # private domain), so aggregation sees all robots without a cmd_vel bridge.
+    aggregation = TimerAction(
+        period=20.0,
+        actions=[Node(
+            package='navigation',
+            executable='aggregation',
+            name='aggregation',
+            output='screen',
+            parameters=[{'use_sim_time': use_sim_time_bool}],
+        )],
+    )
+
     actions = [
         bringup_group,
         localization,
+        odom_bridge,
+        aggregation,
     ]
 
     # Optional costmap.
@@ -305,10 +333,19 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     return LaunchDescription([
-        # ROS_DOMAIN_ID and RMW_IMPLEMENTATION are inherited from the shell
-        # (setup_robot.sh). DO NOT override them here — per-robot domain
-        # isolation depends on the shell exports. CYCLONEDDS_URI is no
-        # longer used because the XML peer file has been retired.
+        # ROS_DOMAIN_ID is inherited from the shell (setup_robot.sh) so that
+        # each robot's local nodes run in its private domain (11/12/13).
+        # RMW_IMPLEMENTATION and CYCLONEDDS_URI must be set here explicitly
+        # because domain_bridge (launched by odom_bridge.launch.py) needs
+        # the static-peer XML to find domain-10 participants on the LAN.
+        # Multicast is disabled in cyclone_dds.xml, so without this URI the
+        # bridge stays localhost-only and /robotX/odom never reaches the WSL.
+        SetEnvironmentVariable('RMW_IMPLEMENTATION', 'rmw_cyclonedds_cpp'),
+        SetEnvironmentVariable(
+            'CYCLONEDDS_URI',
+            os.path.join(
+                get_package_share_directory('navigation'),
+                'config', 'cyclone_dds.xml')),
 
         # Hardware platform settings.
         SetEnvironmentVariable('MACHINE_TYPE', 'MentorPi_Mecanum'),

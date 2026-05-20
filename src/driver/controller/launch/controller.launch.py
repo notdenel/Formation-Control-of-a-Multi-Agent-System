@@ -19,6 +19,7 @@ def launch_setup(context):
     namespace    = LaunchConfiguration('namespace').perform(context)
     use_sim_time = LaunchConfiguration('use_sim_time').perform(context)
     enable_odom  = LaunchConfiguration('enable_odom')
+    ekf_config   = LaunchConfiguration('ekf_config').perform(context)
 
     # Frame IDs must be fully qualified. PushRosNamespace does NOT rewrite
     # message header frame_id values.
@@ -95,7 +96,7 @@ def launch_setup(context):
     # namespace prefix (or empty string).
     prefix = f'{namespace}/' if namespace else ''
     ekf_param = ReplaceString(
-        source_file=os.path.join(controller_package_path, 'config/ekf.yaml'),
+        source_file=os.path.join(controller_package_path, 'config', ekf_config),
         replacements={'namespace/': prefix},
     )
 
@@ -130,6 +131,7 @@ def generate_launch_description():
         DeclareLaunchArgument('namespace',    default_value=''),
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('enable_odom',  default_value='true'),
+        DeclareLaunchArgument('ekf_config',   default_value='ekf.yaml'),
         DeclareLaunchArgument('odom_frame',   default_value='odom'),
         DeclareLaunchArgument('base_frame',   default_value='base_footprint'),
         DeclareLaunchArgument('imu_frame',    default_value='imu_link'),

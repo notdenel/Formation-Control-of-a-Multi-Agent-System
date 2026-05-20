@@ -31,7 +31,6 @@ def generate_launch_description():
     pkg_dir  = get_package_share_directory('navigation')
     map_yaml = os.path.join(pkg_dir, 'config', 'maps', 'map_01.yaml')
     rviz_cfg = os.path.join(pkg_dir, 'rviz', 'multi_robot.rviz')
-    bridge_yaml = os.path.join(pkg_dir, 'config', 'domain_bridge.yaml')
 
     use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='false')
     rviz_arg = DeclareLaunchArgument(
@@ -78,17 +77,6 @@ def generate_launch_description():
         }],
     )
 
-    # Domain bridge: carries /robotN/odom from each robot's private domain
-    # into domain 10 and /robotN/controller/cmd_vel back out.
-    # Reads bridges definition from config/domain_bridge.yaml.
-    domain_bridge = Node(
-        package='domain_bridge',
-        executable='domain_bridge',
-        name='odom_cmd_vel_bridge',
-        arguments=[bridge_yaml],
-        output='screen',
-    )
-
     rviz = Node(
         package='rviz2',
         executable='rviz2',
@@ -104,6 +92,5 @@ def generate_launch_description():
         map_server,
         map_lifecycle,
         pose_aggregator,
-        domain_bridge,
         TimerAction(period=2.0, actions=[rviz]),
     ])

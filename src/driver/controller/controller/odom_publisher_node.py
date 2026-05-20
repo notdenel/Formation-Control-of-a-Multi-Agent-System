@@ -37,9 +37,9 @@ ODOM_TWIST_COVARIANCE = list(map(float,
                          0, 0, 0, 0, 1e6, 0,
                          0, 0, 0, 0, 0, 1e3]))
 
-ODOM_TWIST_COVARIANCE_STOP = list(map(float, 
-                            [1e-9, 0, 0, 0, 0, 0, 
-                              0, 1e-3, 1e-9, 0, 0, 0,
+ODOM_TWIST_COVARIANCE_STOP = list(map(float,
+                            [1e-9, 0, 0, 0, 0, 0,
+                              0, 1e-9, 0, 0, 0, 0,
                               0, 0, 1e6, 0, 0, 0,
                               0, 0, 0, 1e6, 0, 0,
                               0, 0, 0, 0, 1e6, 0,
@@ -129,6 +129,9 @@ class Controller(Node):
         self.create_subscription(Twist, 'cmd_vel', self.app_cmd_vel_callback, 1)
         self.create_service(Trigger, 'controller/load_calibrate_param', self.load_calibrate_param)
         self.create_service(Trigger, '~/init_finish', self.get_node_state)
+        # Watchdog: if no cmd_vel arrives for 0.5 s, stop motors.
+        self._last_cmd_vel_time = time.monotonic()
+        self.create_timer(0.1, self._cmd_vel_watchdog)
         self.get_logger().info('\033[1;32m%s\033[0m' % 'start')
 
     def get_node_state(self, request, response):
@@ -205,6 +208,7 @@ class Controller(Node):
         self.cmd_vel_callback(msg)
 
     def cmd_vel_callback(self, msg):
+        self._last_cmd_vel_time = time.monotonic()
         if self.machine_type == 'MentorPi_Mecanum':
             self.linear_x = msg.linear.x
             self.linear_y = msg.linear.y
@@ -233,6 +237,12 @@ class Controller(Node):
                 data.state = [servo_state]
                 data.duration = 0.02
                 self.servo_state_pub.publish(data)
+
+    def _cmd_vel_watchdog(self):
+        if time.monotonic() - self._last_cmd_vel_time > 0.5:
+            if self.machine_type == 'MentorPi_Mecanum':
+                speeds = self.mecanum.set_velocity(0.0, 0.0, 0.0)
+                self.motor_pub.publish(speeds)
 
         # elif self.machine_type == 'MentorPi_Acker':
         #     self.linear_x = msg.linear.x
