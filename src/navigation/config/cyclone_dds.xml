@@ -25,7 +25,7 @@
   <Domain id="any">
     <General>
       <Interfaces>
-        <NetworkInterface name="wlan0" priority="default" multicast="default"/>
+        <NetworkInterface autodetermine="true" priority="default" multicast="default"/>
       </Interfaces>
       <!-- Multicast disabled: rely solely on the static unicast peer list below -->
       <AllowMulticast>false</AllowMulticast>

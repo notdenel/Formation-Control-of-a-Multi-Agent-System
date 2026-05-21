@@ -93,6 +93,7 @@ def generate_launch_description():
         arguments=['-d', rviz_cfg],
         output='screen',
         condition=IfCondition(rviz_enabled),
+        additional_env={'LIBGL_ALWAYS_SOFTWARE': '1'},
     )
 
     return LaunchDescription([

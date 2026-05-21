@@ -58,17 +58,15 @@ ROBOT3_IP=172.31.115.94
 WSL_IP=172.31.78.102
 
 case "$(hostname)" in
-  agent1) export ROS_STATIC_PEERS="${ROBOT2_IP}:${ROBOT3_IP}:${WSL_IP}" ;;
-  agent2) export ROS_STATIC_PEERS="${ROBOT1_IP}:${ROBOT3_IP}:${WSL_IP}" ;;
-  agent3) export ROS_STATIC_PEERS="${ROBOT1_IP}:${ROBOT2_IP}:${WSL_IP}" ;;
-  *)      export ROS_STATIC_PEERS="${ROBOT1_IP}:${ROBOT2_IP}:${ROBOT3_IP}" ;;
+  agent1) export ROS_STATIC_PEERS="${ROBOT2_IP};${ROBOT3_IP};${WSL_IP}" ;;
+  agent2) export ROS_STATIC_PEERS="${ROBOT1_IP};${ROBOT3_IP};${WSL_IP}" ;;
+  agent3) export ROS_STATIC_PEERS="${ROBOT1_IP};${ROBOT2_IP};${WSL_IP}" ;;
+  *)      export ROS_STATIC_PEERS="${ROBOT1_IP};${ROBOT2_IP};${ROBOT3_IP}" ;;
 esac
 
 # ── Hardware profile ──────────────────────────────────────────────────────────
 export MACHINE_TYPE=MentorPi_Mecanum
 export LIDAR_TYPE=LD19
 
-echo "[setup_env] RMW=${RMW_IMPLEMENTATION}  DOMAIN=${ROS_DOMAIN_ID}  ROBOT=${ROBOT_NAME}"
-echo "[setup_env] STATIC_PEERS=${ROS_STATIC_PEERS}"
 echo "[setup_env] RMW=${RMW_IMPLEMENTATION}  DOMAIN=${ROS_DOMAIN_ID}  ROBOT=${ROBOT_NAME}"
 echo "[setup_env] STATIC_PEERS=${ROS_STATIC_PEERS}"
