@@ -42,10 +42,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 
 
-# ── APF parameters ────────────────────────────────────────────────────────────
-G_A = 10.0
-# Natural equilibrium where attraction force is zero: (G_R/G_A)^(1/3) ≈ 0.37 m
-# Kept as comment for reference; GOAL_TOLERANCE is set explicitly below.
+# ── Motion parameters ─────────────────────────────────────────────────────────
 GOAL_TOLERANCE = 0.40       # m — stop when all pairwise distances are below this
 LINEAR_SPEED   = 0.3        # m/s
 
@@ -135,7 +132,7 @@ class DiscoveryNode(Node):
                 for t, _ in self.get_topic_names_and_types()
                 if (m := self._ODOM_RE.match(t))
             })
-            if candidates:
+            if len(candidates) >= 2:
                 break
             rclpy.spin_once(self, timeout_sec=0.2)
 
@@ -249,12 +246,10 @@ class RobotDriver(Node):
             if dist < 1e-6:
                 continue
 
-            # Linear APF: error = dist - GOAL_TOLERANCE
-            # Negative sign: pulls self toward peer when too far,
-            #                pushes self away when too close.
-            error = dist - GOAL_TOLERANCE
-            direction = delta.normalized()
-            f_total = f_total + (-direction) * G_A * error
+            # Unit vector toward peer — speed is fixed at LINEAR_SPEED after
+            # normalisation, so magnitude here only matters for multi-peer
+            # direction blending.
+            f_total = f_total + (-delta.normalized())
 
         if all(d < GOAL_TOLERANCE for d in distances):
             self.cmd_pub.publish(Twist())
