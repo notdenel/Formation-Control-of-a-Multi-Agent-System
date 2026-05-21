@@ -5,11 +5,10 @@ robot_pose_broadcaster.py
 Simulates one robot's presence on the shared ROS graph without hardware.
 
 Publishes:
-  /robotX/amcl_pose  (PoseWithCovarianceStamped, TRANSIENT_LOCAL 10 Hz)
+  /robotX/odom  (nav_msgs/Odometry, 10 Hz, frame_id=robotX/odom)
 
 Broadcasts TF:
-  map → robotX/odom          (dynamic, 10 Hz)
-  robotX/odom → robotX/base_footprint  (static, identity)
+  robotX/odom → robotX/base_footprint  (dynamic, 10 Hz)
   robotX/base_footprint → robotX/lidar_frame  (static, z offset)
 
 Subscribes:
@@ -20,9 +19,9 @@ Subscribes:
 Parameters
 ----------
 robot_name     str    e.g. 'robot2'
-x              float  initial x in map frame (m)
-y              float  initial y in map frame (m)
-yaw            float  initial yaw in map frame (rad)
+x              float  initial x in odom frame (m)
+y              float  initial y in odom frame (m)
+yaw            float  initial yaw in odom frame (rad)
 lidar_z_offset float  height of lidar above base_footprint (m)
 wander         bool   move in a circle if true
 wander_radius  float  radius of wander circle (m)
@@ -35,12 +34,13 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, DurabilityPolicy, ReliabilityPolicy, HistoryPolicy
 import tf2_ros
 from geometry_msgs.msg import PoseWithCovarianceStamped, TransformStamped
+from nav_msgs.msg import Odometry
 
 
-AMCL_QOS = QoSProfile(
+ODOM_QOS = QoSProfile(
     depth=1,
     reliability=ReliabilityPolicy.RELIABLE,
-    durability=DurabilityPolicy.TRANSIENT_LOCAL,
+    durability=DurabilityPolicy.VOLATILE,
     history=HistoryPolicy.KEEP_LAST,
 )
 
@@ -76,13 +76,15 @@ class RobotPoseBroadcaster(Node):
         self._w_cy  = self._y
         self._w_ang = 0.0
 
+        self._odom_frame = f'{self._robot}/odom'
+        self._base_frame = f'{self._robot}/base_footprint'
+
         self._tf_dyn    = tf2_ros.TransformBroadcaster(self)
         self._tf_static = tf2_ros.StaticTransformBroadcaster(self)
 
-        self._pose_pub = self.create_publisher(
-            PoseWithCovarianceStamped, f'/{self._robot}/amcl_pose', AMCL_QOS)
+        self._odom_pub = self.create_publisher(
+            Odometry, f'/{self._robot}/odom', ODOM_QOS)
 
-        # RViz "2D Pose Estimate" sends PoseWithCovarianceStamped to initialpose
         self.create_subscription(
             PoseWithCovarianceStamped,
             f'/{self._robot}/initialpose',
@@ -90,25 +92,16 @@ class RobotPoseBroadcaster(Node):
             10,
         )
 
-        self._send_static(f'{self._robot}/odom',           f'{self._robot}/base_footprint',
-                          0.0, 0.0, 0.0, 0.0)
-        self._send_static(f'{self._robot}/base_footprint', f'{self._robot}/lidar_frame',
+        self._send_static(self._base_frame, f'{self._robot}/lidar_frame',
                           0.0, 0.0, lidar_z, 0.0)
 
-        self.create_timer(0.1, self._step)  # 10 Hz
+        self.create_timer(0.1, self._step)
 
         self.get_logger().info(
             f'[{self._robot}] broadcaster ready  '
             f'x={self._x:.2f} y={self._y:.2f} yaw={math.degrees(self._yaw):.1f}°  '
             f'wander={self._wander}'
         )
-        if not self._wander:
-            self.get_logger().info(
-                f'[{self._robot}] static — move via: '
-                f'ros2 topic pub --once /{self._robot}/initialpose '
-                f'geometry_msgs/PoseWithCovarianceStamped '
-                f"'{{header:{{frame_id:map}},pose:{{pose:{{position:{{x:1.0,y:0.0}}}}}}}}'"
-            )
 
     def _initialpose_cb(self, msg: PoseWithCovarianceStamped) -> None:
         p = msg.pose.pose
@@ -132,11 +125,23 @@ class RobotPoseBroadcaster(Node):
             self._y = self._w_cy + self._w_r * math.sin(self._w_ang)
             self._yaw = self._w_ang + math.pi * 0.5
 
-        self._tf_dyn.sendTransform(
-            self._make_tf('map', f'{self._robot}/odom',
-                          self._x, self._y, 0.0, self._yaw)
-        )
-        self._publish_pose()
+        now = self.get_clock().now().to_msg()
+        qx, qy, qz, qw = _yaw_to_quat(self._yaw)
+
+        t = TransformStamped()
+        t.header.stamp    = now
+        t.header.frame_id = self._odom_frame
+        t.child_frame_id  = self._base_frame
+        t.transform.translation.x = self._x
+        t.transform.translation.y = self._y
+        t.transform.translation.z = 0.0
+        t.transform.rotation.x = qx
+        t.transform.rotation.y = qy
+        t.transform.rotation.z = qz
+        t.transform.rotation.w = qw
+        self._tf_dyn.sendTransform(t)
+
+        self._publish_odom(now, qx, qy, qz, qw)
 
     def _make_tf(self, parent, child, x, y, z, yaw) -> TransformStamped:
         t = TransformStamped()
@@ -156,13 +161,13 @@ class RobotPoseBroadcaster(Node):
     def _send_static(self, parent, child, x, y, z, yaw) -> None:
         self._tf_static.sendTransform(self._make_tf(parent, child, x, y, z, yaw))
 
-    def _publish_pose(self) -> None:
-        msg = PoseWithCovarianceStamped()
-        msg.header.stamp    = self.get_clock().now().to_msg()
-        msg.header.frame_id = 'map'
+    def _publish_odom(self, stamp, qx, qy, qz, qw) -> None:
+        msg = Odometry()
+        msg.header.stamp    = stamp
+        msg.header.frame_id = self._odom_frame
+        msg.child_frame_id  = self._base_frame
         msg.pose.pose.position.x = self._x
         msg.pose.pose.position.y = self._y
-        qx, qy, qz, qw = _yaw_to_quat(self._yaw)
         msg.pose.pose.orientation.x = qx
         msg.pose.pose.orientation.y = qy
         msg.pose.pose.orientation.z = qz
@@ -170,7 +175,7 @@ class RobotPoseBroadcaster(Node):
         msg.pose.covariance[0]  = 0.01
         msg.pose.covariance[7]  = 0.01
         msg.pose.covariance[35] = 0.01
-        self._pose_pub.publish(msg)
+        self._odom_pub.publish(msg)
 
 
 def main(args=None):

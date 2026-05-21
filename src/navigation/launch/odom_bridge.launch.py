@@ -8,7 +8,6 @@ What is bridged for robotX (private domain D → fleet domain 10, and back):
 
   private → fleet (10):
     /robotX/odom        own EKF-fused odometry  (position + velocity)
-    /robotX/amcl_pose   AMCL global pose         (for WSL pose_aggregator)
 
   fleet (10) → private:
     /robotY/odom        peer Y position           (for on-robot aggregation)

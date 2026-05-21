@@ -1,26 +1,25 @@
 """
 multi_robot.launch.py
 =====================
-All-fake demo: map + 3 pose broadcasters + aggregator.
+All-fake demo: map + 3 odom broadcasters + aggregator.
 No hardware required.
 
   ros2 launch navigation multi_robot.launch.py
 
 Topics published:
   /map                 — occupancy grid
-  /robot1/amcl_pose   — robot1 at (0, 0)
-  /robot2/amcl_pose   — robot2 at (2, 0)
-  /robot3/amcl_pose   — robot3 at (-2, 0)
-  /global_robot_states — PoseArray, frame=map
+  /robot1/odom         — robot1 at (0, 0)
+  /robot2/odom         — robot2 at (2, 0)
+  /robot3/odom         — robot3 at (-2, 0)
+  /global_robot_states — PoseArray, frame=odom
 
 TF tree:
-  map
-   ├── robot1/odom → robot1/base_footprint → robot1/lidar_frame
-   ├── robot2/odom → robot2/base_footprint → robot2/lidar_frame
-   └── robot3/odom → robot3/base_footprint → robot3/lidar_frame
+  robot1/odom → robot1/base_footprint → robot1/lidar_frame
+  robot2/odom → robot2/base_footprint → robot2/lidar_frame
+  robot3/odom → robot3/base_footprint → robot3/lidar_frame
 
 Verify:
-  ros2 topic list | grep -E 'amcl|global|/map'
+  ros2 topic list | grep -E 'odom|global'
   ros2 topic echo /global_robot_states --once
   ros2 run tf2_tools view_frames
 """
@@ -103,10 +102,7 @@ def generate_launch_description():
         executable='pose_aggregator',
         name='pose_aggregator',
         output='screen',
-        parameters=[{
-            'robot_names':  [cfg[0] for cfg in ROBOT_CONFIGS],
-            'use_sim_time': use_sim_time,
-        }],
+        parameters=[{'use_sim_time': use_sim_time}],
     )
 
     rviz = Node(

@@ -9,8 +9,8 @@
     WSL coordinator  ROS_DOMAIN_ID 10  172.31.78.102
 
   Each robot runs domain_bridge (odom_bridge.launch.py) which joins both its
-  private domain and domain 10 so /robotX/odom and /robotX/amcl_pose can be
-  observed from WSL without broadcasting full scan/TF traffic.
+  private domain and domain 10 so /robotX/odom can be observed from WSL
+  without broadcasting full scan/TF traffic.
 
   Set on every machine (or source setup_env.sh which does this):
     export CYCLONEDDS_URI=file://$HOME/ros2_ws/src/navigation/config/cyclone_dds.xml
