@@ -18,17 +18,8 @@ Architecture:
   EKF 1  (controller/config/ekf.yaml, world_frame=odom)
     fuses odom_raw + odom_rf2o + IMU  →  /robotX/odom + TF odom→base_footprint
 
-  EKF 2  (navigation/config/ekf_map.yaml, world_frame=map)
-    fuses amcl_pose                   →  /robotX/odom_amcl + TF map→odom
-    AMCL provides the highest-quality global correction; EKF 2 smooths it.
-
-  AMCL   (single_robot.launch.py)
-    tf_broadcast: false — EKF 2 owns the map→odom transform.
-    set_initial_pose: true at (0,0,yaw=0) — no RViz 2D Pose Estimate needed.
-    Robots are physically placed at the map origin before driving.
-
   odom_bridge  (odom_bridge.launch.py)
-    domain_bridge bridges only /robotX/odom + /robotX/amcl_pose outbound and
+    domain_bridge bridges only /robotX/odom outbound and
     peer /robotY/odom + /robotZ/odom inbound.  Everything else (scan, TF, IMU)
     stays in the robot's private domain.
 
@@ -54,18 +45,15 @@ Expected robot-local topics:
   /robotX/odom_raw
   /robotX/odom_rf2o
   /robotX/odom          ← EKF 1 (odom world-frame)
-  /robotX/odom_amcl     ← EKF 2 (map world-frame)
   /robotX/imu
-  /robotX/amcl_pose
   /robotX/position
   /robotX/controller/cmd_vel
 
 Expected TF tree:
 
-  map
-  └── [EKF 2] robotX/odom
-               └── [EKF 1] robotX/base_footprint
-                            └── robotX/lidar_frame
+  robotX/odom
+  └── [EKF 1] robotX/base_footprint
+               └── robotX/lidar_frame
 """
 
 import os
@@ -101,7 +89,6 @@ _ROBOT_DOMAINS = {
 
 def launch_setup(context, *args, **kwargs):
     robot_name = LaunchConfiguration('robot_name').perform(context)
-    map_name = LaunchConfiguration('map').perform(context)
     use_sim_time = LaunchConfiguration('use_sim_time').perform(context)
     launch_costmap = LaunchConfiguration('launch_costmap').perform(context)
 
@@ -116,7 +103,6 @@ def launch_setup(context, *args, **kwargs):
     lidar_launch = os.path.join(pkg_periph, 'launch', 'lidar.launch.py')
     odom_pub_launch = os.path.join(pkg_ctrl, 'launch', 'odom_publisher.launch.py')
     rf2o_launch = os.path.join(pkg_rf2o, 'launch', 'rf2o_laser_odometry.launch.py')
-    single_launch = os.path.join(pkg_nav, 'launch', 'single_robot.launch.py')
     odom_bridge_launch = os.path.join(pkg_nav, 'launch', 'odom_bridge.launch.py')
     costmap_params = os.path.join(pkg_nav, 'config', 'multi_robot_costmap.yaml')
 
@@ -128,12 +114,6 @@ def launch_setup(context, *args, **kwargs):
     # EKF 1: fuses wheel encoder + RF2O + IMU → odom world-frame.
     ekf_param = ReplaceString(
         source_file=os.path.join(pkg_ctrl, 'config', 'ekf.yaml'),
-        replacements={'namespace/': f'{robot_name}/'},
-    )
-
-    # EKF 2: fuses AMCL pose → map world-frame, publishes map→odom TF.
-    ekf_map_param = ReplaceString(
-        source_file=os.path.join(pkg_nav, 'config', 'ekf_map.yaml'),
         replacements={'namespace/': f'{robot_name}/'},
     )
 
@@ -216,22 +196,6 @@ def launch_setup(context, *args, **kwargs):
         remappings=[('odometry/filtered', 'odom')],
     )
 
-    # EKF 2: map world-frame — AMCL-based global correction.
-    # Delayed until AMCL has converged and begun publishing amcl_pose.
-    # AMCL starts with set_initial_pose so it should be active within ~5 s
-    # of the lifecycle manager activating it; 10 s delay gives ample margin.
-    ekf_map = TimerAction(
-        period=10.0,
-        actions=[Node(
-            package='robot_localization',
-            executable='ekf_node',
-            name='ekf_global_filter_node',
-            output='screen',
-            parameters=[ekf_map_param, {'use_sim_time': use_sim_time_bool}],
-            remappings=[('odometry/filtered', 'odom_amcl')],
-        )],
-    )
-
     pose_norm = Node(
         package='navigation',
         executable='pose_normalizer',
@@ -251,24 +215,11 @@ def launch_setup(context, *args, **kwargs):
         imu_static_tf,
         rf2o,
         ekf_odom,
-        ekf_map,
         pose_norm,
     ])
 
-    # AMCL + map server — run as part of this launch so only one command is needed.
-    # AMCL has tf_broadcast: false in nav2_params; EKF 2 owns map→odom TF.
-    localization = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(single_launch),
-        launch_arguments={
-            'robot_name': robot_name,
-            'use_sim_time': use_sim_time,
-            'map': map_name,
-            'scan_topic': _SCAN_TOPIC,
-        }.items(),
-    )
-
-    # odom_bridge: bridges /robotX/odom and /robotX/amcl_pose to fleet domain
-    # 10, and brings peer odom topics into this robot's private domain.
+    # odom_bridge: bridges /robotX/odom to fleet domain 10, and brings
+    # peer odom topics into this robot's private domain.
     odom_bridge = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(odom_bridge_launch),
         launch_arguments={'robot_name': robot_name}.items(),
@@ -291,7 +242,6 @@ def launch_setup(context, *args, **kwargs):
 
     actions = [
         bringup_group,
-        localization,
         odom_bridge,
         aggregation,
     ]
@@ -352,9 +302,6 @@ def generate_launch_description():
         SetEnvironmentVariable('MACHINE_TYPE', 'MentorPi_Mecanum'),
         SetEnvironmentVariable('LIDAR_TYPE', 'LD19'),
 
-        DeclareLaunchArgument(
-            'map', default_value='map_01',
-            description='Map name without extension in navigation/config/maps.'),
         DeclareLaunchArgument(
             'robot_name', default_value='robot1',
             description='Robot namespace: robot1, robot2, or robot3.'),

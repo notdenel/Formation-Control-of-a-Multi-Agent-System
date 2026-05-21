@@ -3,17 +3,17 @@
 pose_aggregator.py
 ==================
 Runs on the WSL coordinator (domain 10).  Dynamically discovers active robots
-by scanning for /robotX/amcl_pose publishers and subscribing only when a live
+by scanning for /robotX/odom publishers and subscribing only when a live
 publisher exists — no phantom topics for robots that are not running.
 
 Topics subscribed (created on demand):
-  /robotX/amcl_pose  (geometry_msgs/PoseWithCovarianceStamped)
+  /robotX/odom  (nav_msgs/Odometry)
   These are bridged from each robot's private domain via odom_bridge.
 
 Topics published:
-  /global_robot_states  (geometry_msgs/PoseArray, frame_id=map)
+  /global_robot_states  (geometry_msgs/PoseArray, frame_id=odom)
     poses[i] = robot i in sorted discovery order.
-    Missing/not-yet-localised poses have position.z = -1.0 as a sentinel.
+    Missing poses have position.z = -1.0 as a sentinel.
 """
 
 import re
@@ -23,17 +23,18 @@ from rclpy.node import Node
 from rclpy.qos import (
     QoSProfile, DurabilityPolicy, ReliabilityPolicy, HistoryPolicy,
 )
-from geometry_msgs.msg import PoseArray, PoseWithCovarianceStamped, Pose
+from geometry_msgs.msg import PoseArray, Pose
+from nav_msgs.msg import Odometry
 
 
-AMCL_QOS = QoSProfile(
+ODOM_QOS = QoSProfile(
     depth=1,
     reliability=ReliabilityPolicy.RELIABLE,
-    durability=DurabilityPolicy.TRANSIENT_LOCAL,
+    durability=DurabilityPolicy.VOLATILE,
     history=HistoryPolicy.KEEP_LAST,
 )
 
-_AMCL_PATTERN = re.compile(r'^(/robot\w+)/amcl_pose$')
+_ODOM_PATTERN = re.compile(r'^(/robot\w+)/odom$')
 
 
 class PoseAggregator(Node):
@@ -51,9 +52,9 @@ class PoseAggregator(Node):
             'pose_aggregator ready — scanning for active robots on domain 10')
 
     def _discover(self) -> None:
-        """Subscribe to amcl_pose for any robot that has a live publisher."""
+        """Subscribe to odom for any robot that has a live publisher."""
         for topic_name, _ in self.get_topic_names_and_types():
-            m = _AMCL_PATTERN.match(topic_name)
+            m = _ODOM_PATTERN.match(topic_name)
             if not m:
                 continue
             ns = m.group(1)
@@ -62,15 +63,15 @@ class PoseAggregator(Node):
             if self.count_publishers(topic_name) == 0:
                 continue
             self._subs[ns] = self.create_subscription(
-                PoseWithCovarianceStamped,
+                Odometry,
                 topic_name,
-                lambda msg, n=ns: self._amcl_cb(msg, n),
-                AMCL_QOS,
+                lambda msg, n=ns: self._odom_cb(msg, n),
+                ODOM_QOS,
             )
             self.get_logger().info(
                 f'Discovered robot: {ns}  (tracking {sorted(self._subs)})')
 
-    def _amcl_cb(self, msg: PoseWithCovarianceStamped, robot_name: str) -> None:
+    def _odom_cb(self, msg: Odometry, robot_name: str) -> None:
         first = robot_name not in self._poses
         self._poses[robot_name] = msg.pose.pose
         if first:
@@ -81,7 +82,7 @@ class PoseAggregator(Node):
             return
         msg = PoseArray()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = 'map'
+        msg.header.frame_id = 'odom'
         for ns in sorted(self._subs):
             if ns in self._poses:
                 msg.poses.append(self._poses[ns])

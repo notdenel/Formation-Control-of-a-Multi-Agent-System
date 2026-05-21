@@ -1,23 +1,3 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-cd "$HOME/ros2_ws"
-
-if [ ! -f /opt/ros/jazzy/setup.bash ]; then
-  echo "[ERROR] /opt/ros/jazzy/setup.bash not found. Is ROS2 Jazzy installed?"
-  exit 1
-fi
-
-set +u
-source /opt/ros/jazzy/setup.bash
-set -u
-
-export MAKEFLAGS="-j1"
-export CMAKE_BUILD_PARALLEL_LEVEL=1
-
-echo "[INFO] Cleaning workspace build/install/log..."
-rm -rf build install log
-
 echo "[INFO] Building base workspace packages, skipping rf2o_laser_odometry and navigation first..."
 colcon build \
   --symlink-install \
