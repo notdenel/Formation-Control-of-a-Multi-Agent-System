@@ -6,13 +6,11 @@ WSL coordinator stack: pose_aggregator + optional RViz.
 Run this on the WSL laptop in ROS_DOMAIN_ID 10 (source setup_env.sh first):
 
   ros2 launch navigation infrastructure.launch.py
-  ros2 launch navigation infrastructure.launch.py rviz:=true
 
 What this does:
   - Runs pose_aggregator which dynamically discovers active robots by watching
     for /robotX/odom publishers on domain 10.  Only robots whose odom bridge
     is running will appear — no phantom topics.
-  - Optionally opens RViz with the multi-robot configuration.
 
 Domain bridging is NOT done here.  Each robot runs its own odom_bridge
 (started by real_robot.launch.py) to relay /robotX/odom into domain 10.
@@ -26,24 +24,18 @@ To verify robot positions from WSL:
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable, TimerAction
-from launch.conditions import IfCondition
+from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
     pkg_dir = get_package_share_directory('navigation')
-    rviz_cfg = os.path.join(pkg_dir, 'rviz', 'multi_robot.rviz')
     dds_cfg = os.path.join(pkg_dir, 'config', 'cyclone_dds.xml')
 
     use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='false')
-    rviz_arg = DeclareLaunchArgument(
-        'rviz', default_value='false',
-        description='Set true to open RViz (desktop/WSL only)')
 
     use_sim_time = LaunchConfiguration('use_sim_time')
-    rviz_enabled = LaunchConfiguration('rviz')
 
     # Dynamic discovery: subscribes to /robotX/odom only when a live publisher
     # appears on domain 10.  Bridge ghost topics never emit messages, so only
@@ -56,16 +48,6 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}],
     )
 
-    rviz = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        arguments=['-d', rviz_cfg],
-        output='screen',
-        condition=IfCondition(rviz_enabled),
-        additional_env={'LIBGL_ALWAYS_SOFTWARE': '1'},
-    )
-
     return LaunchDescription([
         # WSL coordinator must be in domain 10 and use SUBNET discovery to reach
         # the robots' domain_bridge participants across WiFi.
@@ -74,7 +56,5 @@ def generate_launch_description():
         SetEnvironmentVariable('ROS_AUTOMATIC_DISCOVERY_RANGE', 'SUBNET'),
 
         use_sim_time_arg,
-        rviz_arg,
         pose_aggregator,
-        TimerAction(period=2.0, actions=[rviz]),
     ])
