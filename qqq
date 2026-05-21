@@ -1,0 +1,59 @@
+[33mcommit 91c963bf427c9393552c7ba7d6185f35fe3b6151[m[33m ([m[1;36mHEAD[m[33m)[m
+Author: Benjamin Banh <benjbanh@gmail.com>
+Date:   Wed May 20 21:06:30 2026 -0700
+
+    Fixed some things
+
+[33mcommit f8e282804843eff48eea208c3341a379ad92b84f[m
+Author: notdenel <dminhsims08@gmail.com>
+Date:   Thu May 7 02:10:50 2026 -0700
+
+    fixed namespace and updated scripts
+
+[33mcommit efd560c2e264131de20e1bcbc2dae7a56f32dacf[m
+Author: Daniel Sims <benjbanh@gmail.com>
+Date:   Mon May 4 19:11:14 2026 -0700
+
+    Added formation control simple aggregation for one robot. Position acquired by placing robot at known origin and manually driving the robot to desired starting position to give it position. Joystick also works when called after bringup(already worked but wanted to include it
+
+[33mcommit 2f141e103784af58bef81584f5545a4266904eae[m
+Author: Daniel Sims <benjbanh@gmail.com>
+Date:   Mon May 4 03:40:12 2026 -0700
+
+    EVERYTHING WORKSgit status! SLAM, bringups everything. Added Hiwonder calibration for imu drift, missing package. odom parameters might need a nudge for more accurate position. ekf also a little iffy parameter wise. Controller, peripherals, slam packages all perfect
+
+[33mcommit 59032d473ddd1d02297913832e1140a2a0776bcd[m
+Author: Daniel Sims <benjbanh@gmail.com>
+Date:   Sun May 3 17:52:24 2026 -0700
+
+    Same as before, SLAM verifiably working. Added fresh multi_robot_bringup before git revert
+
+[33mcommit e2dc6780bf3fb6407764cc5f3764e77e7508024b[m
+Author: Daniel Sims <benjbanh@gmail.com>
+Date:   Sun May 3 17:37:18 2026 -0700
+
+    vendor slam implementation
+
+[33mcommit 6f1cea21b4f3f07fe3620d1e5e8e781d1ef39edd[m
+Author: Benjamin Banh <benjbanh@gmail.com>
+Date:   Wed Apr 29 21:00:14 2026 -0700
+
+    SLAM BABYYYYgit statusgit status!
+
+[33mcommit 2c777a319a6c1b6121187b862e6ef65032f02554[m
+Author: Benjamin Banh <benjbanh@gmail.com>
+Date:   Wed Apr 29 16:32:53 2026 -0700
+
+    i am a fat SLAM chud
+
+[33mcommit be5367641f372105ef6b2c9e5f123888d2cc4e2b[m
+Author: Daniel Sims <122936099+notdenel@users.noreply.github.com>
+Date:   Wed Apr 29 01:05:39 2026 -0700
+
+    initial readme
+
+[33mcommit 83f3ecc92c1c7b7f79ae8f1182c86f23b6b01a86[m
+Author: notdenel <dminhsims08@gmail.com>
+Date:   Wed Apr 29 00:57:56 2026 -0700
+
+    initial clean workspace root

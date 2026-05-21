@@ -1,5 +1,7 @@
 from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, EmitEvent, RegisterEventHandler
+from launch.event_handlers import OnProcessExit
+from launch.events import Shutdown
 from launch import LaunchDescription, LaunchService
 from launch.substitutions import LaunchConfiguration
 
@@ -24,17 +26,29 @@ def generate_launch_description():
                 'laser_scan_dir': True,
                 'enable_angle_crop_func': False,
                 'angle_crop_min': 135.0,
-                'angle_crop_max': 225.0
+                'angle_crop_max': 225.0,
+                'publish_rate': 30.0,
             }
         ],
         remappings=[('scan', scan_raw)]
     )
 
+    # If the lidar node exits for any reason (crash or normal shutdown), propagate
+    # a Shutdown event so no other node keeps running without sensor data.
+    # During a normal Ctrl-C the launch system is already shutting down, so the
+    # duplicate Shutdown event is a harmless no-op.
+    lidar_exit_handler = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=ld19_node,
+            on_exit=[EmitEvent(event=Shutdown())]
+        )
+    )
 
     return LaunchDescription([
         lidar_frame_arg,
         scan_raw_arg,
         ld19_node,
+        lidar_exit_handler,
     ])
 
 if __name__ == '__main__':
@@ -43,5 +57,3 @@ if __name__ == '__main__':
     ls = LaunchService()
     ls.include_launch_description(ld)
     ls.run()
-
-

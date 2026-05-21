@@ -24,6 +24,7 @@ source /opt/ros/jazzy/setup.bash
 source ~/ros2_ws/install/setup.bash
 
 # ── RMW ───────────────────────────────────────────────────────────────────────
+# ── RMW ───────────────────────────────────────────────────────────────────────
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 # ── Per-machine domain + robot name ──────────────────────────────────────────
@@ -67,5 +68,7 @@ esac
 export MACHINE_TYPE=MentorPi_Mecanum
 export LIDAR_TYPE=LD19
 
+echo "[setup_env] RMW=${RMW_IMPLEMENTATION}  DOMAIN=${ROS_DOMAIN_ID}  ROBOT=${ROBOT_NAME}"
+echo "[setup_env] STATIC_PEERS=${ROS_STATIC_PEERS}"
 echo "[setup_env] RMW=${RMW_IMPLEMENTATION}  DOMAIN=${ROS_DOMAIN_ID}  ROBOT=${ROBOT_NAME}"
 echo "[setup_env] STATIC_PEERS=${ROS_STATIC_PEERS}"

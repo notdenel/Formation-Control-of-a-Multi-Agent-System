@@ -27,6 +27,7 @@
       <!-- autodetermine picks the first active non-loopback interface (wlan0) -->
       <Interfaces>
         <NetworkInterface autodetermine="true" priority="default" multicast="default"/>
+        <NetworkInterface autodetermine="true" priority="default" multicast="default"/>
       </Interfaces>
       <!-- Multicast disabled: rely solely on the static unicast peer list below -->
       <AllowMulticast>false</AllowMulticast>
