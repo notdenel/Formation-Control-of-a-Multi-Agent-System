@@ -255,7 +255,7 @@ def launch_setup(context, *args, **kwargs):
         pose_norm,
     ])
 
-    # AMCL + map server (single_robot.launch.py manages its own namespace).
+    # AMCL + map server — run as part of this launch so only one command is needed.
     # AMCL has tf_broadcast: false in nav2_params; EKF 2 owns map→odom TF.
     localization = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(single_launch),

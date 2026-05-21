@@ -330,29 +330,8 @@ def main() -> None:
         return
 
     if len(namespaces) == 1:
-        ns = namespaces[0]
-        print(f'[aggregation] Single robot ({ns}) — smoke-test cmd_vel.')
-        smoke = rclpy.create_node('aggregation_smoke')
-        pub = smoke.create_publisher(Twist, f'{ns}/controller/cmd_vel', 10)
-
-        def _pub():
-            t = Twist()
-            t.linear.x = 0.1
-            t.linear.y = 0.1
-            t.angular.z = 0.2
-            pub.publish(t)
-
-        smoke.create_timer(0.1, _pub)
-        try:
-            rclpy.spin(smoke)
-        except KeyboardInterrupt:
-            stop = Twist()
-            for _ in range(10):
-                pub.publish(stop)
-                rclpy.spin_once(smoke, timeout_sec=0.05)
-        finally:
-            smoke.destroy_node()
-            rclpy.shutdown()
+        print(f'[aggregation] Only one robot found ({namespaces[0]}). Need ≥2 for aggregation. Exiting.')
+        rclpy.shutdown()
         return
 
     print(f'\n[aggregation] Starting for: {" ↔ ".join(namespaces)}\n'

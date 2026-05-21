@@ -1,5 +1,0 @@
-# RRC Lite / robot controller board
-SUBSYSTEM=="tty", KERNEL=="ttyACM*", MODE:="0666", SYMLINK+="rrc"
-
-# LDROBOT / STL LiDAR through CH341 USB-serial adapter
-SUBSYSTEM=="tty", KERNEL=="ttyUSB*", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", MODE:="0666", SYMLINK+="ldlidar"
