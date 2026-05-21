@@ -91,9 +91,11 @@ def launch_setup(context, *args, **kwargs):
     robot_name = LaunchConfiguration('robot_name').perform(context)
     use_sim_time = LaunchConfiguration('use_sim_time').perform(context)
     launch_costmap = LaunchConfiguration('launch_costmap').perform(context)
+    launch_aggregation = LaunchConfiguration('launch_aggregation').perform(context)
 
     use_sim_time_bool = use_sim_time.lower() == 'true'
     launch_costmap_bool = launch_costmap.lower() == 'true'
+    launch_aggregation_bool = launch_aggregation.lower() == 'true'
 
     pkg_nav = get_package_share_directory('navigation')
     pkg_periph = get_package_share_directory('peripherals')
@@ -243,8 +245,10 @@ def launch_setup(context, *args, **kwargs):
     actions = [
         bringup_group,
         odom_bridge,
-        aggregation,
     ]
+
+    if launch_aggregation_bool:
+        actions.append(aggregation)
 
     if launch_costmap_bool:
         costmap_group = GroupAction([
@@ -311,6 +315,9 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'launch_costmap', default_value='false',
             description='Launch Nav2 global costmap.'),
+        DeclareLaunchArgument(
+            'launch_aggregation', default_value='false',
+            description='Auto-start aggregation node after 20 s.'),
 
         OpaqueFunction(function=launch_setup),
     ])
