@@ -1,0 +1,225 @@
+=== BEGIN PATCH ===
+diff --git a/src/navigation/launch/real_robot.launch.py b/src/navigation/launch/real_robot.launch.py
+--- a/src/navigation/launch/real_robot.launch.py
++++ b/src/navigation/launch/real_robot.launch.py
+@@ -253,9 +253,16 @@
+         }.items(),
+     )
+ 
++    odom_bridge_launch = os.path.join(pkg_nav, 'launch', 'odom_bridge.launch.py')
++    odom_bridge = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(odom_bridge_launch),
++        launch_arguments={'robot_name': robot_name}.items(),
++    )
++
+     actions = [
+         bringup_group,
+         localization,
++        odom_bridge,
+     ]
+ 
+     # Optional costmap.
+diff --git a/src/navigation/launch/infrastructure.launch.py b/src/navigation/launch/infrastructure.launch.py
+--- a/src/navigation/launch/infrastructure.launch.py
++++ b/src/navigation/launch/infrastructure.launch.py
+@@ -31,7 +31,6 @@
+     pkg_dir  = get_package_share_directory('navigation')
+     map_yaml = os.path.join(pkg_dir, 'config', 'maps', 'map_01.yaml')
+     rviz_cfg = os.path.join(pkg_dir, 'rviz', 'multi_robot.rviz')
+-    bridge_yaml = os.path.join(pkg_dir, 'config', 'domain_bridge.yaml')
+ 
+     use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='false')
+     rviz_arg = DeclareLaunchArgument(
+@@ -81,16 +80,6 @@
+         }],
+     )
+ 
+-    # Domain bridge: carries /robotN/odom from each robot's private domain
+-    # into domain 10 and /robotN/controller/cmd_vel back out.
+-    # Reads bridges definition from config/domain_bridge.yaml.
+-    domain_bridge = Node(
+-        package='domain_bridge',
+-        executable='domain_bridge',
+-        name='odom_cmd_vel_bridge',
+-        arguments=[bridge_yaml],
+-        output='screen',
+-    )
+-
+     rviz = Node(
+         package='rviz2',
+         executable='rviz2',
+@@ -105,6 +94,5 @@
+         map_server,
+         map_lifecycle,
+         pose_aggregator,
+-        domain_bridge,
+         TimerAction(period=2.0, actions=[rviz]),
+     ])
+diff --git a/src/navigation/config/nav2_params_robot1.yaml b/src/navigation/config/nav2_params_robot1.yaml
+--- a/src/navigation/config/nav2_params_robot1.yaml
++++ b/src/navigation/config/nav2_params_robot1.yaml
+@@ -106,8 +106,8 @@
+     lambda_short: 0.1
+     # Update thresholds — mecanum can translate without rotating, so be
+     # willing to update on small motion.
+-    update_min_d: 0.1
+-    update_min_a: 0.1
++    update_min_d: 0.05
++    update_min_a: 0.05
+     resample_interval: 1
+     # Particle filter.
+     min_particles: 500
+@@ -120,7 +120,7 @@
+     # Initial pose — set_initial_pose: true seeds AMCL on startup so it does
+     # not deadlock waiting for /initialpose. Override per-robot below if the
+     # robot starts somewhere other than the map origin (units: m, rad).
+-    set_initial_pose: true
++    set_initial_pose: false
+     always_reset_initial_pose: false
+     first_map_only: false
+     initial_pose:
+diff --git a/src/navigation/config/nav2_params_robot2.yaml b/src/navigation/config/nav2_params_robot2.yaml
+--- a/src/navigation/config/nav2_params_robot2.yaml
++++ b/src/navigation/config/nav2_params_robot2.yaml
+@@ -106,8 +106,8 @@
+     lambda_short: 0.1
+     # Update thresholds — mecanum can translate without rotating, so be
+     # willing to update on small motion.
+-    update_min_d: 0.1
+-    update_min_a: 0.1
++    update_min_d: 0.05
++    update_min_a: 0.05
+     resample_interval: 1
+     # Particle filter.
+     min_particles: 500
+@@ -120,7 +120,7 @@
+     # Initial pose — set_initial_pose: true seeds AMCL on startup so it does
+     # not deadlock waiting for /initialpose. Override per-robot below if the
+     # robot starts somewhere other than the map origin (units: m, rad).
+-    set_initial_pose: true
++    set_initial_pose: false
+     always_reset_initial_pose: false
+     first_map_only: false
+     initial_pose:
+diff --git a/src/navigation/config/nav2_params_robot3.yaml b/src/navigation/config/nav2_params_robot3.yaml
+--- a/src/navigation/config/nav2_params_robot3.yaml
++++ b/src/navigation/config/nav2_params_robot3.yaml
+@@ -106,8 +106,8 @@
+     lambda_short: 0.1
+     # Update thresholds — mecanum can translate without rotating, so be
+     # willing to update on small motion.
+-    update_min_d: 0.1
+-    update_min_a: 0.1
++    update_min_d: 0.05
++    update_min_a: 0.05
+     resample_interval: 1
+     # Particle filter.
+     min_particles: 500
+@@ -120,7 +120,7 @@
+     # Initial pose — set_initial_pose: true seeds AMCL on startup so it does
+     # not deadlock waiting for /initialpose. Override per-robot below if the
+     # robot starts somewhere other than the map origin (units: m, rad).
+-    set_initial_pose: true
++    set_initial_pose: false
+     always_reset_initial_pose: false
+     first_map_only: false
+     initial_pose:
+diff --git a/src/driver/controller/controller/odom_publisher_node.py b/src/driver/controller/controller/odom_publisher_node.py
+--- a/src/driver/controller/controller/odom_publisher_node.py
++++ b/src/driver/controller/controller/odom_publisher_node.py
+@@ -129,6 +129,9 @@
+         self.create_subscription(Twist, 'cmd_vel', self.app_cmd_vel_callback, 1)
+         self.create_service(Trigger, 'controller/load_calibrate_param', self.load_calibrate_param)
+         self.create_service(Trigger, '~/init_finish', self.get_node_state)
++        # Watchdog: if no cmd_vel arrives for 0.5 s, stop motors.
++        self._last_cmd_vel_time = time.monotonic()
++        self.create_timer(0.1, self._cmd_vel_watchdog)
+         self.get_logger().info('\033[1;32m%s\033[0m' % 'start')
+ 
+     def get_node_state(self, request, response):
+@@ -205,6 +208,7 @@
+         self.cmd_vel_callback(msg)
+ 
+     def cmd_vel_callback(self, msg):
++        self._last_cmd_vel_time = time.monotonic()
+         if self.machine_type == 'MentorPi_Mecanum':
+             self.linear_x = msg.linear.x
+             self.linear_y = msg.linear.y
+@@ -226,3 +230,9 @@
+             if speeds[0] is not None:
+                 servo_state = PWMServoState()
+                 servo_state.id = [3]
++
++    def _cmd_vel_watchdog(self):
++        if time.monotonic() - self._last_cmd_vel_time > 0.5:
++            if self.machine_type == 'MentorPi_Mecanum':
++                speeds = self.mecanum.set_velocity(0.0, 0.0, 0.0)
++                self.motor_pub.publish(speeds)
+diff --git a/src/navigation/navigation/aggregation.py b/src/navigation/navigation/aggregation.py
+--- a/src/navigation/navigation/aggregation.py
++++ b/src/navigation/navigation/aggregation.py
+@@ -334,11 +334,34 @@
+     namespaces = discovery.discover(timeout_sec=5.0)
+     discovery.destroy_node()
+ 
+-    if len(namespaces) < 2:
+-        print(f'[aggregation] Need at least 2 robots, found {len(namespaces)}. Aborting.')
++    if len(namespaces) < 1:
++        print(f'[aggregation] No robots found. Aborting.')
+         rclpy.shutdown()
+         return
+ 
++    if len(namespaces) == 1:
++        ns = namespaces[0]
++        print(f'[aggregation] Only 1 robot found. Running cmd_vel smoke test on {ns}.')
++        smoke = rclpy.create_node('aggregation_smoke')
++        pub = smoke.create_publisher(Twist, f'{ns}/controller/cmd_vel', 10)
++        def smoke_pub():
++            t = Twist()
++            t.linear.x = 0.1
++            t.angular.z = 0.2
++            pub.publish(t)
++        smoke.create_timer(0.1, smoke_pub)
++        try:
++            rclpy.spin(smoke)
++        except KeyboardInterrupt:
++            stop = Twist()
++            for _ in range(10):
++                pub.publish(stop)
++                rclpy.spin_once(smoke, timeout_sec=0.05)
++        finally:
++            smoke.destroy_node()
++            rclpy.shutdown()
++        return
++
+     print(f'\nStarting aggregation for: {" ↔ ".join(namespaces)}\n'
+           f'Equilibrium distance: {GOAL_TOLERANCE:.3f} m\n')
+ 
+diff --git a/src/navigation/launch/hardware_bringup.launch.py b/src/navigation/launch/hardware_bringup.launch.py
+--- a/src/navigation/launch/hardware_bringup.launch.py
++++ b/src/navigation/launch/hardware_bringup.launch.py
+@@ -112,21 +112,7 @@
+             'use_sim_time':         use_sim_time_bool,
+         }],
+     )
+ 
+-    # ── Static TF: base_footprint → lidar_frame ───────────────────────────────
+-    # SLAM toolbox needs this to place scans in the correct frame.
+-    # Adjust z (0.10 m) to match your actual lidar mounting height.
+-    static_lidar_tf = Node(
+-        package='tf2_ros',
+-        executable='static_transform_publisher',
+-        name='lidar_static_tf',
+-        output='screen',
+-        arguments=[
+-            '--x', '0.0', '--y', '0.0', '--z', '0.10',
+-            '--roll', '0.0', '--pitch', '0.0', '--yaw', '0.0',
+-            '--frame-id',       f'{robot_name}/base_footprint',
+-            '--child-frame-id', f'{robot_name}/lidar_frame',
+-        ],
+-    )
++    # Static lidar TF is published by peripherals/launch/lidar.launch.py.
+ 
+-    return [lidar_group, controller, rf2o, static_lidar_tf]
++    return [lidar_group, controller, rf2o]
+=== END PATCH ===

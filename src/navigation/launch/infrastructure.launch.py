@@ -6,16 +6,14 @@ Coordinator-side stack. Run this on the WSL laptop in domain 10.
   ros2 launch navigation infrastructure.launch.py
 
 Starts:
-  - map_server                       (domain 10)
-  - pose_aggregator                  (domain 10)
-  - domain_bridge for /robot1/odom and /robot1/controller/cmd_vel
-  - domain_bridge for /robot2/odom and /robot2/controller/cmd_vel
-  - domain_bridge for /robot3/odom and /robot3/controller/cmd_vel
+  - map_server        (domain 10)
+  - pose_aggregator   (domain 10, subscribes /robotX/amcl_pose)
+  - rviz2             (optional, domain 10)
 
-The domain_bridge process joins BOTH domains itself, so it does not matter
-which ROS_DOMAIN_ID is exported in this terminal — but the rest of this
-launch (map_server, pose_aggregator) does run in the shell's domain,
-which must be 10 so it matches the aggregator.
+Domain bridging is NOT done here — each robot runs its own odom_bridge
+(odom_bridge.launch.py) to relay /robotX/odom into domain 10.
+cmd_vel stays entirely within each robot's private domain; aggregation
+runs on-robot and publishes locally.
 """
 
 import os
@@ -71,10 +69,7 @@ def generate_launch_description():
         executable='pose_aggregator',
         name='pose_aggregator',
         output='screen',
-        parameters=[{
-            'robot_names':  ['robot1', 'robot2', 'robot3'],
-            'use_sim_time': use_sim_time,
-        }],
+        parameters=[{'use_sim_time': use_sim_time}],
     )
 
     rviz = Node(

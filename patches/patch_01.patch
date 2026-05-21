@@ -1,0 +1,22 @@
+cat > patch1_real_robot.patch <<'PATCH_EOF'
+--- a/src/navigation/launch/real_robot.launch.py
++++ b/src/navigation/launch/real_robot.launch.py
+@@ -253,9 +253,16 @@
+         }.items(),
+     )
+ 
++    odom_bridge_launch = os.path.join(pkg_nav, 'launch', 'odom_bridge.launch.py')
++    odom_bridge = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(odom_bridge_launch),
++        launch_arguments={'robot_name': robot_name}.items(),
++    )
++
+     actions = [
+         bringup_group,
+         localization,
++        odom_bridge,
+     ]
+ 
+     # Optional costmap.
+PATCH_EOF
+git apply --check patch1_real_robot.patch && git apply patch1_real_robot.patch

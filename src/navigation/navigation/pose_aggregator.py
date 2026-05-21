@@ -2,19 +2,25 @@
 """
 pose_aggregator.py
 ==================
-Subscribes to /robotX/amcl_pose for each robot and publishes a combined
-/global_robot_states (geometry_msgs/PoseArray, frame_id: map) at 5 Hz.
+Dynamically discovers active robots by watching for /robotX/amcl_pose
+publishers (instead of subscribing to a static list), then publishes a
+combined /global_robot_states (geometry_msgs/PoseArray, frame_id: map) at 5 Hz.
 
-Topics subscribed:
-  /robot1/amcl_pose  (geometry_msgs/PoseWithCovarianceStamped)
-  /robot2/amcl_pose
-  /robot3/amcl_pose
+Dynamic discovery means:
+  - No phantom topics for robots that are not running.
+  - New robots are picked up automatically when their amcl_pose publisher
+    appears (the bridge adds it to domain 10 as soon as AMCL is active).
+
+Topics subscribed (created on demand as robots come online):
+  /robotX/amcl_pose  (geometry_msgs/PoseWithCovarianceStamped)
 
 Topics published:
   /global_robot_states  (geometry_msgs/PoseArray, frame_id=map)
-    poses[0] = robot1, poses[1] = robot2, poses[2] = robot3
+    poses[i] = robot i in sorted discovery order
     Missing poses have position.z = -1.0 to signal "not yet localised".
 """
+
+import re
 
 import rclpy
 from rclpy.node import Node
@@ -29,53 +35,59 @@ AMCL_QOS = QoSProfile(
     history=HistoryPolicy.KEEP_LAST,
 )
 
+_AMCL_PATTERN = re.compile(r'^(/robot\w+)/amcl_pose$')
+
 
 class PoseAggregator(Node):
     def __init__(self):
         super().__init__('pose_aggregator')
 
-        self.declare_parameter('robot_names', ['robot1', 'robot2', 'robot3'])
-        self.robot_names = (
-            self.get_parameter('robot_names').get_parameter_value().string_array_value
-        )
-
         self._poses: dict[str, Pose] = {}
-        self._received: dict[str, bool] = {n: False for n in self.robot_names}
-
-        for name in self.robot_names:
-            self.create_subscription(
-                PoseWithCovarianceStamped,
-                f'/{name}/amcl_pose',
-                lambda msg, n=name: self._amcl_cb(msg, n),
-                AMCL_QOS,
-            )
+        self._subs: dict[str, rclpy.node.Subscription] = {}
 
         self._pub = self.create_publisher(PoseArray, '/global_robot_states', 10)
         self.create_timer(0.2, self._publish)
+        self.create_timer(2.0, self._discover)
 
-        self.get_logger().info(
-            f'pose_aggregator ready — tracking: {list(self.robot_names)}'
-        )
+        self.get_logger().info('pose_aggregator ready — scanning for active robots')
+
+    def _discover(self) -> None:
+        """Subscribe to amcl_pose for any robot that has a live publisher."""
+        for topic_name, _ in self.get_topic_names_and_types():
+            m = _AMCL_PATTERN.match(topic_name)
+            if not m:
+                continue
+            ns = m.group(1)
+            if ns in self._subs:
+                continue
+            if self.count_publishers(topic_name) == 0:
+                continue
+            self._subs[ns] = self.create_subscription(
+                PoseWithCovarianceStamped,
+                topic_name,
+                lambda msg, n=ns: self._amcl_cb(msg, n),
+                AMCL_QOS,
+            )
+            self.get_logger().info(f'Discovered robot: {ns}  (tracking {sorted(self._subs)})')
 
     def _amcl_cb(self, msg: PoseWithCovarianceStamped, robot_name: str) -> None:
         self._poses[robot_name] = msg.pose.pose
-        if not self._received[robot_name]:
-            self._received[robot_name] = True
+        if robot_name not in self._poses:
             self.get_logger().info(f'First pose received from {robot_name}')
 
     def _publish(self) -> None:
+        if not self._subs:
+            return
         msg = PoseArray()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = 'map'
-
-        for name in self.robot_names:
-            if name in self._poses:
-                msg.poses.append(self._poses[name])
+        for ns in sorted(self._subs):
+            if ns in self._poses:
+                msg.poses.append(self._poses[ns])
             else:
                 sentinel = Pose()
-                sentinel.position.z = -1.0  # signals "not yet localised"
+                sentinel.position.z = -1.0
                 msg.poses.append(sentinel)
-
         self._pub.publish(msg)
 
 

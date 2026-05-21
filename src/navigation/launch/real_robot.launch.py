@@ -346,6 +346,10 @@ def generate_launch_description():
             os.path.join(
                 get_package_share_directory('navigation'),
                 'config', 'cyclone_dds.xml')),
+        # domain_bridge needs SUBNET discovery so its domain-10 participant
+        # can reach WSL across WiFi.  Private-domain isolation is maintained by
+        # ROS_DOMAIN_ID, not by the discovery range.
+        SetEnvironmentVariable('ROS_AUTOMATIC_DISCOVERY_RANGE', 'SUBNET'),
 
         # Hardware platform settings.
         SetEnvironmentVariable('MACHINE_TYPE', 'MentorPi_Mecanum'),

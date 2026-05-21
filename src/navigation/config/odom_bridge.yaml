@@ -8,16 +8,16 @@
 #
 # What crosses domains:
 #   private → fleet (10):  /__ROBOT_NS__/odom        (Odometry)
+#                          /__ROBOT_NS__/amcl_pose    (PoseWithCovarianceStamped)
 #   fleet → private:       /__PEER1_NS__/odom         (Odometry)
 #                          /__PEER2_NS__/odom         (Odometry)
 #
-# Only nav_msgs/Odometry crosses the domain boundary.  Odometry carries both
-# position (pose.pose.position) and velocity (twist.twist) so the on-robot
-# aggregation node has everything it needs for APF.
+# amcl_pose crosses so that the WSL coordinator's pose_aggregator can receive
+# map-frame positions and so 'ros2 topic echo /robotX/amcl_pose' works on WSL.
 #
-# cmd_vel, amcl_pose, initialpose, scan, TF etc. stay local to each robot's
-# private domain.  Aggregation runs ON each robot and publishes cmd_vel in
-# the private domain — no reverse bridge needed, minimising WiFi traffic.
+# cmd_vel, initialpose, scan, TF etc. stay local to each robot's private domain.
+# Aggregation runs ON each robot and publishes cmd_vel in the private domain —
+# no reverse bridge needed, minimising WiFi traffic.
 #
 # To seed AMCL on a robot, SSH into it and publish /robotX/initialpose
 # directly on its private domain.
@@ -26,6 +26,11 @@ name: odom_bridge
 topics:
   /__ROBOT_NS__/odom:
     type: nav_msgs/msg/Odometry
+    from_domain: __PRIVATE_DOMAIN__
+    to_domain: 10
+
+  /__ROBOT_NS__/amcl_pose:
+    type: geometry_msgs/msg/PoseWithCovarianceStamped
     from_domain: __PRIVATE_DOMAIN__
     to_domain: 10
 

@@ -1,0 +1,13 @@
+cat > patch2_infrastructure.patch <<'PATCH_EOF'
+--- a/src/navigation/launch/infrastructure.launch.py
++++ b/src/navigation/launch/infrastructure.launch.py
+@@ -31,7 +31,6 @@
+     pkg_dir  = get_package_share_directory('navigation')
+     map_yaml = os.path.join(pkg_dir, 'config', 'maps', 'map_01.yaml')
+     rviz_cfg = os.path.join(pkg_dir, 'rviz', 'multi_robot.rviz')
+-    bridge_yaml = os.path.join(pkg_dir, 'config', 'domain_bridge.yaml')
+ 
+     use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='false')
+     rviz_arg = DeclareLaunchArgument(
+PATCH_EOF
+git apply --check patch2_infrastructure.patch && git apply patch2_infrastructure.patch
