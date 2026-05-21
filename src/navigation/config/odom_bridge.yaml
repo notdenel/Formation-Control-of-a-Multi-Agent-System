@@ -18,9 +18,8 @@
 #     /__PEER1_NS__/odom        — peer position for on-robot aggregation
 #     /__PEER2_NS__/odom        — peer position for on-robot aggregation
 #
-# cmd_vel is bridged fleet→private so WSL-side joystick/teleop can drive robots
-# directly. Do not publish cmd_vel on domain 10 while aggregation is running
-# on-robot — both would write to the same topic simultaneously.
+# cmd_vel stays entirely within each robot's private domain; aggregation runs
+# on-robot and publishes cmd_vel locally — no reverse bridge needed.
 
 name: odom_bridge
 topics:
@@ -28,11 +27,6 @@ topics:
     type: nav_msgs/msg/Odometry
     from_domain: __PRIVATE_DOMAIN__
     to_domain: 10
-
-  /__ROBOT_NS__/controller/cmd_vel:
-    type: geometry_msgs/msg/Twist
-    from_domain: 10
-    to_domain: __PRIVATE_DOMAIN__
 
   /__PEER1_NS__/odom:
     type: nav_msgs/msg/Odometry
