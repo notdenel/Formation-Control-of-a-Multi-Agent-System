@@ -71,7 +71,9 @@ def launch_setup(context, *args, **kwargs):
         'odom_frame_id':  f'{robot_name}/odom',
         'base_frame_id':  f'{robot_name}/base_footprint',
         'global_frame_id': 'map',
-        'tf_broadcast':   True,
+        # EKF 2 (ekf_global_filter_node, ekf_map.yaml) owns the map→odom TF.
+        # AMCL must not broadcast it or the two nodes will fight over the transform.
+        'tf_broadcast':   False,
     }
 
     # nav2_amcl in Jazzy uses a sensor-data QoS (best-effort, depth=10) on the

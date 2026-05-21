@@ -1,0 +1,55 @@
+# ekf_map.yaml — Second EKF instance: global localization (map world-frame).
+#
+# Role in the dual-EKF pipeline:
+#   EKF 1 (driver/controller/config/ekf.yaml, world_frame=odom):
+#     fuses odom_raw + odom_rf2o + IMU  →  publishes /robotX/odom
+#                                           TF: robotX/odom → robotX/base_footprint
+#
+#   EKF 2 (this file, world_frame=map):
+#     fuses amcl_pose (highest trust)   →  publishes /robotX/odom_amcl
+#                                           TF: map → robotX/odom  (smooth correction)
+#
+# AMCL must have tf_broadcast: false when this EKF is active so the two nodes
+# do not fight over the map → robotX/odom transform.
+#
+# The "namespace/" placeholder is replaced at launch time by ReplaceString:
+#   namespace/ → robot1/   (or robot2/, robot3/)
+#
+# Inputs are relative topic names inside the robot's namespace group, so
+# PushRosNamespace(robot_name) resolves them to /robotX/amcl_pose etc.
+
+/**:
+  ros__parameters:
+    frequency: 10.0
+    sensor_timeout: 1.0
+    two_d_mode: true
+    transform_time_offset: 0.0
+    transform_timeout: 0.5
+    print_diagnostics: false
+    debug: false
+    permit_corrected_publication: false
+    publish_acceleration: false
+
+    # This EKF publishes TF map → robotX/odom so AMCL must not.
+    publish_tf: true
+
+    map_frame: map
+    odom_frame: namespace/odom
+    base_link_frame: namespace/base_footprint
+    # world_frame: map causes this EKF to publish the map → odom correction.
+    world_frame: map
+
+    # AMCL global pose — highest-trust position source.
+    # Fuse x, y, and yaw; ignore z/roll/pitch (2-D mode) and velocities.
+    pose0: amcl_pose
+    pose0_config: [true,  true,  false,
+                   false, false, true,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false]
+    pose0_queue_size: 5
+    pose0_differential: false
+    pose0_relative: false
+    # Keep covariance generous — AMCL already estimates its own uncertainty.
+    # Tightening this too much can cause the filter to reject corrections.
+    pose0_pose_rejection_threshold: 5.0

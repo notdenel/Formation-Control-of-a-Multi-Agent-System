@@ -1,0 +1,46 @@
+# odom_bridge.yaml — domain_bridge configuration template for one robot.
+#
+# Template tokens filled at launch time by odom_bridge.launch.py:
+#   __ROBOT_NS__        this robot's namespace, e.g. robot1
+#   __PRIVATE_DOMAIN__  this robot's private ROS_DOMAIN_ID (11 / 12 / 13)
+#   __PEER1_NS__        first peer namespace (alphabetically next robot)
+#   __PEER2_NS__        second peer namespace
+#
+# Battery-efficient design: only /robotX/odom crosses domain boundaries.
+# Scan, TF, IMU, and all other high-bandwidth topics stay in each robot's
+# private domain.  The WSL coordinator receives positions via amcl_pose
+# (bridged for observation) without ever seeing lidar or TF traffic.
+#
+# Topic flow:
+#   private (__PRIVATE_DOMAIN__) → fleet (10):
+#     /__ROBOT_NS__/odom        — own wheel+RF2O+IMU fused position+velocity
+#     /__ROBOT_NS__/amcl_pose   — AMCL global pose for WSL pose_aggregator
+#
+#   fleet (10) → private (__PRIVATE_DOMAIN__):
+#     /__PEER1_NS__/odom        — peer position for on-robot aggregation
+#     /__PEER2_NS__/odom        — peer position for on-robot aggregation
+#
+# cmd_vel stays entirely within each robot's private domain; aggregation runs
+# on-robot and publishes cmd_vel locally — no reverse bridge needed.
+
+name: odom_bridge
+topics:
+  /__ROBOT_NS__/odom:
+    type: nav_msgs/msg/Odometry
+    from_domain: __PRIVATE_DOMAIN__
+    to_domain: 10
+
+  /__ROBOT_NS__/amcl_pose:
+    type: geometry_msgs/msg/PoseWithCovarianceStamped
+    from_domain: __PRIVATE_DOMAIN__
+    to_domain: 10
+
+  /__PEER1_NS__/odom:
+    type: nav_msgs/msg/Odometry
+    from_domain: 10
+    to_domain: __PRIVATE_DOMAIN__
+
+  /__PEER2_NS__/odom:
+    type: nav_msgs/msg/Odometry
+    from_domain: 10
+    to_domain: __PRIVATE_DOMAIN__
